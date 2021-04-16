@@ -41,10 +41,12 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
 		progress = measurement->get_progress_percent();
 		printf("%s (epoch %ld, progress %.2f%%): read throughput %.2lf ops/sec, write throughput %.2lf ops/sec, total throughput %.2lf ops/sec\n",
 		       task, epoch, 100 * progress, rt_throughput[GET], rt_throughput[SET], rt_throughput[GET] + rt_throughput[SET]);
+		std::cout << std::flush;
 	}
 	printf("%s overall: read throughput %.2lf ops/sec, write throughput %.2lf ops/sec, total throughput %.2lf ops/sec\n",
 	       task, measurement->get_throughput(GET), measurement->get_throughput(SET),
 	       measurement->get_throughput(GET) + measurement->get_throughput(SET));
+	std::cout << std::flush;
 }
 
 void initialize_workload(WiredTigerFactory *factory, long nr_entry, long key_size, long value_size, unsigned int seed) {
