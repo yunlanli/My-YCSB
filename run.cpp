@@ -62,9 +62,12 @@ void initialize_workload(WiredTigerFactory *factory, long nr_entry, long key_siz
 	OpMeasurement init_measurement;
 	WiredTigerClient *init_client = factory->create_client();
 
+	init_measurement.start_measure();
+	init_measurement.set_max_progress(nr_entry);
 	std::thread init_thread(worker_thread_fn, init_client, &init_workload, &init_measurement);
 	std::thread init_stat_thread(monitor_thread_fn, "initialization", &init_measurement);
 	init_thread.join();
+	init_measurement.finish_measure();
 	init_stat_thread.join();
 	factory->destroy_client(init_client);
 }
@@ -96,6 +99,7 @@ int main(int argc, char *argv[]) {
 		workload_arr[thread_index] = new RandomWorkload(key_size, value_size, nr_entry, nr_op, read_ratio, thread_index);
 	}
 	measurement.start_measure();
+	measurement.set_max_progress(nr_op * nr_thread);
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		thread_arr[thread_index] = new std::thread(worker_thread_fn, client_arr[thread_index], workload_arr[thread_index], &measurement);
 	}

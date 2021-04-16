@@ -50,7 +50,7 @@ int WiredTigerClient::do_set(char *key_buffer, char *value_buffer) {
 	this->cursor->set_key(cursor, key_buffer);
 	this->cursor->set_value(cursor, value_buffer);
 	ret = this->cursor->insert(cursor);
-	if (!ret) {
+	if (ret != 0) {
 		fprintf(stderr, "WiredTigerClient: insert failed, ret: %s\n", wiredtiger_strerror(ret));
 		throw std::invalid_argument("insert failed");
 	}
