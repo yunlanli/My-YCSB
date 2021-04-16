@@ -65,7 +65,7 @@ void initialize_workload(WiredTigerFactory *factory, long nr_entry, long key_siz
 	init_measurement.start_measure();
 	init_measurement.set_max_progress(nr_entry);
 	std::thread init_thread(worker_thread_fn, init_client, &init_workload, &init_measurement);
-	std::thread init_stat_thread(monitor_thread_fn, "initialization", &init_measurement);
+	std::thread init_stat_thread(monitor_thread_fn, "Initialization", &init_measurement);
 	init_thread.join();
 	init_measurement.finish_measure();
 	init_stat_thread.join();

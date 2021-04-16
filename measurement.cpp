@@ -5,6 +5,7 @@ OpMeasurement::OpMeasurement() {
 		this->op_count_arr[i] = 0;
 		this->rt_op_count_arr[i] = 0;
 	}
+	this->cur_progress = 0;
 	this->finished = false;
 }
 
@@ -54,5 +55,5 @@ void OpMeasurement::get_rt_throughput(double *throughput_arr) {
 }
 
 double OpMeasurement::get_progress_percent() {
-	return (double)this->cur_progress / this->max_progress;
+	return ((double) this->cur_progress) / ((double) this->max_progress);
 }
