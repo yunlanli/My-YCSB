@@ -27,8 +27,8 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 		measurement->record_op(type);
 		measurement->record_progress(1);
 	}
-	free(key_buffer);
-	free(value_buffer);
+	delete[] key_buffer;
+	delete[] value_buffer;
 }
 
 void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
@@ -94,6 +94,9 @@ void run_workload(const char *task, WiredTigerFactory *factory, long nr_entry, l
 		delete workload_arr[thread_index];
 		delete thread_arr[thread_index];
 	}
+	delete[] client_arr;
+	delete[] workload_arr;
+	delete[] thread_arr;
 }
 
 enum {
