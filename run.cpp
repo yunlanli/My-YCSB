@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 	long value_size = atol(argv[PARAM_VALUE_SIZE]);
 	long nr_entry = atol(argv[PARAM_NR_ENTRY]);
 	int nr_thread = atol(argv[PARAM_NR_THREAD]);
-	double read_ratio = atol(argv[PARAM_READ_RATIO]);
+	double read_ratio = atof(argv[PARAM_READ_RATIO]);
 	long nr_op = atol(argv[PARAM_NR_OP]);
 
 	WiredTigerFactory factory(nullptr, nullptr, nullptr, nullptr, nullptr, true, nullptr);
