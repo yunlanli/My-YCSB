@@ -115,7 +115,7 @@ WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_nam
 			throw std::invalid_argument("open_session failed");
 		}
 		session->drop(session, this->table_name, nullptr);
-		ret = session->create(session, this->data_dir, this->create_table_config);
+		ret = session->create(session, this->table_name, this->create_table_config);
 		if (ret != 0) {
 			fprintf(stderr, "WiredTigerFactory: create table failed, ret: %s\n", wiredtiger_strerror(ret));
 			throw std::invalid_argument("create table failed");
