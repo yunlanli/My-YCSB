@@ -36,11 +36,11 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
 	double progress;
 	long epoch = 0;
 	for (;!measurement->finished
-	     ;std::this_thread::sleep_for(std::chrono::seconds(1))) {
+	     ;std::this_thread::sleep_for(std::chrono::seconds(1)), ++epoch) {
 		measurement->get_rt_throughput(rt_throughput);
 		progress = measurement->get_progress_percent();
-		printf("%s (%.2f%%): read throughput %.2lf ops/sec, write throughput %.2lf ops/sec, total throughput %.2lf ops/sec\n",
-		       task, 100 * progress, rt_throughput[GET], rt_throughput[SET], rt_throughput[GET] + rt_throughput[SET]);
+		printf("%s (epoch %ld, progress %.2f%%): read throughput %.2lf ops/sec, write throughput %.2lf ops/sec, total throughput %.2lf ops/sec\n",
+		       task, epoch, 100 * progress, rt_throughput[GET], rt_throughput[SET], rt_throughput[GET] + rt_throughput[SET]);
 	}
 	printf("%s overall: read throughput %.2lf ops/sec, write throughput %.2lf ops/sec, total throughput %.2lf ops/sec\n",
 	       task, measurement->get_throughput(GET), measurement->get_throughput(SET),
