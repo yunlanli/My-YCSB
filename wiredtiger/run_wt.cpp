@@ -1,5 +1,6 @@
 #include <iostream>
 #include "worker.h"
+#include "wt_client.h"
 
 enum {
 	PARAM_KEY_SIZE = 1,

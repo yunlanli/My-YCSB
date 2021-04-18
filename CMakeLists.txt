@@ -3,5 +3,16 @@ project(My_YCSB)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(run_wt run_wt.cpp worker.h worker.cpp client.cpp client.h workload.cpp workload.h measurement.cpp measurement.h)
+include_directories(/usr/local/include)
+include_directories(core/include)
+
+set(CoreSource core/client.cpp
+               core/measurement.cpp
+               core/worker.cpp
+               core/workload.cpp)
+
+set(WiredTigerSource wiredtiger/wt_client.cpp wiredtiger/run_wt.cpp)
+
+add_executable(run_wt ${CoreSource} ${WiredTigerSource})
 target_link_libraries(run_wt /usr/local/lib/libwiredtiger.so pthread)
+

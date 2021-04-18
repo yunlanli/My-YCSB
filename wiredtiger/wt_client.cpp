@@ -1,16 +1,11 @@
-#include "client.h"
-
-Client::Client(int id, ClientFactory *factory)
-: id(id), factory(factory) {
-	;
-}
+#include "wt_client.h"
 
 const char *WiredTigerClient::session_default_config = "isolation=read-uncommitted";
 const char *WiredTigerClient::cursor_default_config = nullptr;
 const char *WiredTigerClient::cursor_bulk_config = "bulk";
 
 WiredTigerClient::WiredTigerClient(WiredTigerFactory *factory, int id, const char *session_config, const char *cursor_config)
-: Client(id, factory) {
+	: Client(id, factory) {
 	if (session_config == nullptr)
 		session_config = WiredTigerClient::session_default_config;
 	if (cursor_config == nullptr)
@@ -76,15 +71,15 @@ void WiredTigerClient::close() {
 const char *WiredTigerFactory::default_data_dir = "/users/yuhong/tigerhome";
 const char *WiredTigerFactory::default_table_name = "lsm:karaage";
 const char *WiredTigerFactory::conn_default_config = "create,direct_io=[data],buffer_alignment=512B,mmap=false,"
-                                                     "cache_size=128M,eviction_trigger=95,eviction_target=80,"
-                                                     "eviction=(threads_max=8,threads_min=1)";
+						     "cache_size=128M,eviction_trigger=95,eviction_target=80,"
+						     "eviction=(threads_max=8,threads_min=1)";
 const char *WiredTigerFactory::create_table_default_config = "key_format=S,value_format=S,allocation_size=512B,"
 							     "internal_page_max=512B,leaf_page_max=512B";
 
 WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_name, const char *conn_config,
 				     const char *session_config, const char *cursor_config, bool new_table,
 				     const char *create_table_config)
-: client_id(0) {
+	: client_id(0) {
 	if (data_dir == nullptr)
 		data_dir = WiredTigerFactory::default_data_dir;
 	if (table_name == nullptr)

@@ -1,27 +1,8 @@
-#ifndef YCSB_CLIENT_H
-#define YCSB_CLIENT_H
+#ifndef YCSB_WT_CLIENT_H
+#define YCSB_WT_CLIENT_H
 
-#include <wiredtiger.h>
-#include <atomic>
-#include <stdexcept>
+#include "client.h"
 
-struct ClientFactory;
-
-struct Client {
-	int id;
-	ClientFactory *factory;
-
-	Client(int id, ClientFactory *factory);
-	virtual int do_set(char *key_buffer, char *value_buffer) = 0;
-	virtual int do_get(char *key_buffer, char **value) = 0;
-	virtual int reset() = 0;
-	virtual void close() = 0;
-};
-
-struct ClientFactory {
-	virtual Client *create_client() = 0;
-	virtual void destroy_client(Client *client) = 0;
-};
 
 struct WiredTigerFactory;
 
@@ -58,12 +39,12 @@ struct WiredTigerFactory : public ClientFactory {
 	static const char *create_table_default_config;
 
 	WiredTigerFactory(const char *data_dir, const char *table_name, const char *conn_config,
-	                  const char *session_config, const char *cursor_config, bool new_table,
-	                  const char *create_table_config);
+			  const char *session_config, const char *cursor_config, bool new_table,
+			  const char *create_table_config);
 	void update_session_config(const char *new_session_config);
 	void update_cursor_config(const char *new_cursor_config);
 	WiredTigerClient *create_client() override;
 	void destroy_client(Client *client) override;
 };
 
-#endif //YCSB_CLIENT_H
+#endif //YCSB_WT_CLIENT_H
