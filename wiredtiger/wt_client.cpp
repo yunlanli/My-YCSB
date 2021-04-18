@@ -73,7 +73,7 @@ int WiredTigerClient::reset() {
 void WiredTigerClient::close() {
 	int ret = this->session->close(session, nullptr);
 	if (ret != 0) {
-		throw std::invalid_argument("close failed");
+		fprintf(stderr, "WiredTigerClient: session close failed\n");
 	}
 	this->cursor = nullptr;
 	this->session = nullptr;
