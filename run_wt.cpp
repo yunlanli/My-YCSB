@@ -28,9 +28,11 @@ int main(int argc, char *argv[]) {
 	WiredTigerFactory factory(nullptr, nullptr, nullptr, nullptr, nullptr, true, nullptr);
 
 	factory.update_cursor_config(WiredTigerClient::cursor_bulk_config);
-	run_init_workload(&factory, nr_entry, key_size, value_size);
+	run_init_workload_with_op_measurement(&factory, nr_entry, key_size, value_size);
 
 	factory.update_cursor_config(nullptr);
-	run_random_workload("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread, read_ratio, nr_warm_up_op);
-	run_random_workload("Random-Workload", &factory, nr_entry, key_size, value_size, nr_thread, read_ratio, nr_op);
+	run_random_workload_with_op_measurement("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread,
+	                                        read_ratio, nr_warm_up_op);
+	run_random_workload_with_op_measurement("Random-Workload", &factory, nr_entry, key_size, value_size, nr_thread,
+	                                        read_ratio, nr_op);
 }

@@ -43,7 +43,7 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
 	std::cout << std::flush;
 }
 
-void run_init_workload(ClientFactory *factory, long nr_entry, long key_size, long value_size) {
+void run_init_workload_with_op_measurement(ClientFactory *factory, long nr_entry, long key_size, long value_size) {
 	InitWorkload init_workload(nr_entry, key_size, value_size, 'i');
 	OpMeasurement init_measurement;
 	Client *init_client = factory->create_client();
@@ -58,15 +58,13 @@ void run_init_workload(ClientFactory *factory, long nr_entry, long key_size, lon
 	factory->destroy_client(init_client);
 }
 
-void run_random_workload(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size, int nr_thread, double read_ratio, long nr_op) {
+void run_workload_with_op_measurement(const char *task, ClientFactory *factory, Workload **workload_arr, int nr_thread, long nr_op) {
 	/* allocate resources */
 	Client **client_arr = new Client *[nr_thread];
-	RandomWorkload **workload_arr = new RandomWorkload *[nr_thread];
 	std::thread **thread_arr = new std::thread *[nr_thread];
 	OpMeasurement measurement;
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		client_arr[thread_index] = factory->create_client();
-		workload_arr[thread_index] = new RandomWorkload(key_size, value_size, nr_entry, nr_op, read_ratio, thread_index);
 	}
 
 	/* start running workload */
@@ -85,10 +83,40 @@ void run_random_workload(const char *task, ClientFactory *factory, long nr_entry
 	/* cleanup */
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		factory->destroy_client(client_arr[thread_index]);
-		delete workload_arr[thread_index];
 		delete thread_arr[thread_index];
 	}
 	delete[] client_arr;
-	delete[] workload_arr;
 	delete[] thread_arr;
+}
+
+void run_random_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
+                                             int nr_thread, double read_ratio, long nr_op) {
+	RandomWorkload **workload_arr = new RandomWorkload *[nr_thread];
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		workload_arr[thread_index] = new RandomWorkload(key_size, value_size, nr_entry, nr_op, read_ratio, thread_index);
+	}
+
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op);
+
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		delete workload_arr[thread_index];
+	}
+	delete[] workload_arr;
+}
+
+void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
+					      int nr_thread, double read_ratio, double zipfian_constant, long nr_op) {
+	ZipfianWorkload **workload_arr = new ZipfianWorkload *[nr_thread];
+	printf("ZipfianWorkload: start initializing zipfian variables, might take a while\n");
+	ZipfianWorkload base_workload(key_size, value_size, nr_entry, nr_op, read_ratio, zipfian_constant, 0);
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		workload_arr[thread_index] = base_workload.clone(thread_index);
+	}
+
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op);
+
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		delete workload_arr[thread_index];
+	}
+	delete[] workload_arr;
 }

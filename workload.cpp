@@ -5,6 +5,14 @@ Workload::Workload(long key_size, long value_size)
 	;
 }
 
+long Workload::generate_random_long(unsigned int *seedp) {
+	return (((long)rand_r(seedp)) << (sizeof(int) * 8)) | rand_r(seedp);
+}
+
+double Workload::generate_random_double(unsigned int *seedp) {
+	return ((double)rand_r(seedp)) / RAND_MAX;
+}
+
 RandomWorkload::RandomWorkload(long key_size, long value_size, long nr_entry,
 			       long nr_op, double read_ratio, unsigned int seed)
 : Workload(key_size, value_size), nr_entry(nr_entry), nr_op(nr_op), read_ratio(read_ratio), seed(seed), cur_nr_op(0) {
@@ -18,12 +26,12 @@ bool RandomWorkload::has_next_op() {
 void RandomWorkload::next_op(OperationType *type, char *key_buffer, char *value_buffer) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
-	bool read = this->generate_random_double() <= this->read_ratio;
+	bool read = this->generate_random_double(&this->seed) <= this->read_ratio;
 	if (read)
 		*type = GET;
 	else
 		*type = SET;
-	long key = this->generate_random_long() % this->nr_entry;
+	long key = this->generate_random_long(&this->seed) % this->nr_entry;
 	this->generate_key_string(key_buffer, key);
 	if (!read)
 		this->generate_value_string(value_buffer);
@@ -41,12 +49,79 @@ void RandomWorkload::generate_value_string(char *value_buffer) {
 	value_buffer[this->value_size - 1] = '\0';
 }
 
-long RandomWorkload::generate_random_long() {
-	return (((long)rand_r(&this->seed)) << (sizeof(int) * 8)) | rand_r(&this->seed);
+ZipfianWorkload::ZipfianWorkload(long key_size, long value_size, long nr_entry, long nr_op, double read_ratio,
+                                 double zipfian_constant, unsigned int seed)
+: Workload(key_size, value_size), nr_entry(nr_entry), nr_op(nr_op), read_ratio(read_ratio),
+  zipfian_constant(zipfian_constant), seed(seed) {
+	sprintf(this->key_format, "%%0%ldld", key_size - 1);
+
+	/* zipfian-related initialization */
+	this->zetan = 0;
+	for (long i = 1; i < this->nr_entry + 1; ++i) {
+		this->zetan += 1.0 / (pow((double) i, this->zipfian_constant));
+	}
+	this->theta = this->zipfian_constant;
+	this->zeta2theta = 0;
+	for (long i = 1; i < 3; ++i) {
+		this->zeta2theta += 1.0 / (pow((double) i, this->zipfian_constant));
+	}
+	this->alpha = 1.0 / (1.0 - this->theta);
+	this->eta = (1 - pow(2.0 / (double) this->nr_entry, 1 - this->theta))
+	            / (1 - (this->zeta2theta / this->zetan));
+	this->generate_zipfian_random_long();
 }
 
-double RandomWorkload::generate_random_double() {
-	return ((double)rand_r(&this->seed)) / RAND_MAX;
+bool ZipfianWorkload::has_next_op() {
+	return this->cur_nr_op < this->nr_op;
+}
+
+void ZipfianWorkload::next_op(OperationType *type, char *key_buffer, char *value_buffer) {
+	if (!this->has_next_op())
+		throw std::invalid_argument("does not have next op");
+	bool read = this->generate_random_double(&this->seed) <= this->read_ratio;
+	if (read)
+		*type = GET;
+	else
+		*type = SET;
+	long key = this->generate_zipfian_random_long() % this->nr_entry;
+	this->generate_key_string(key_buffer, key);
+	if (!read)
+		this->generate_value_string(value_buffer);
+	++this->cur_nr_op;
+}
+
+ZipfianWorkload * ZipfianWorkload::clone(unsigned int new_seed) {
+	/* create a new ZipfianWorkload with a cheap nr_entry */
+	ZipfianWorkload *copy = new ZipfianWorkload(this->key_size, this->value_size, 3, this->nr_op,
+	                                            this->read_ratio, this->zipfian_constant, new_seed);
+	copy->zetan = this->zetan;
+	copy->theta = this->theta;
+	copy->zeta2theta = this->zeta2theta;
+	copy->alpha = this->alpha;
+	copy->eta = this->eta;
+	return copy;
+}
+
+long ZipfianWorkload::generate_zipfian_random_long() {
+	double u = this->generate_random_double(&this->seed);
+	double uz = u * this->zetan;
+	if (uz < 1)
+		return 0;
+	if (uz < 1 + pow(0.5, this->theta))
+		return 1;
+	long ret = (long) ((double)this->nr_entry * pow(this->eta * u - this->eta + 1, this->alpha));
+	return ret;
+}
+
+void ZipfianWorkload::generate_key_string(char *key_buffer, long key) {
+	sprintf(key_buffer, this->key_format, key);
+}
+
+void ZipfianWorkload::generate_value_string(char *value_buffer) {
+	for (int i = 0; i < this->value_size - 1; ++i) {
+		value_buffer[i] = 'a' + (rand_r(&this->seed) % ('z' - 'a' + 1));
+	}
+	value_buffer[this->value_size - 1] = '\0';
 }
 
 InitWorkload::InitWorkload(long nr_entry, long key_size, long value_size, unsigned int seed)
