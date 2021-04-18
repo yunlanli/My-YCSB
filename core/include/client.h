@@ -1,7 +1,6 @@
 #ifndef YCSB_CLIENT_H
 #define YCSB_CLIENT_H
 
-#include <wiredtiger.h>
 #include <atomic>
 #include <stdexcept>
 

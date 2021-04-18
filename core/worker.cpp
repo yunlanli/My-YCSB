@@ -43,21 +43,6 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
 	std::cout << std::flush;
 }
 
-void run_init_workload_with_op_measurement(ClientFactory *factory, long nr_entry, long key_size, long value_size) {
-	InitWorkload init_workload(nr_entry, key_size, value_size, 'i');
-	OpMeasurement init_measurement;
-	Client *init_client = factory->create_client();
-
-	init_measurement.start_measure();
-	init_measurement.set_max_progress(nr_entry);
-	std::thread init_thread(worker_thread_fn, init_client, &init_workload, &init_measurement);
-	std::thread init_stat_thread(monitor_thread_fn, "Initialization", &init_measurement);
-	init_thread.join();
-	init_measurement.finish_measure();
-	init_stat_thread.join();
-	factory->destroy_client(init_client);
-}
-
 void run_workload_with_op_measurement(const char *task, ClientFactory *factory, Workload **workload_arr, int nr_thread, long nr_op) {
 	/* allocate resources */
 	Client **client_arr = new Client *[nr_thread];
@@ -87,6 +72,23 @@ void run_workload_with_op_measurement(const char *task, ClientFactory *factory, 
 	}
 	delete[] client_arr;
 	delete[] thread_arr;
+}
+
+void run_init_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size, int nr_thread) {
+	InitWorkload **workload_arr = new InitWorkload *[nr_thread];
+	long nr_entry_per_thread = (nr_entry + nr_thread - 1) / nr_thread;
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		long start_key = nr_entry_per_thread * thread_index;
+		long end_key = std::min(nr_entry_per_thread * (thread_index + 1), nr_entry);
+		workload_arr[thread_index] = new InitWorkload(end_key - start_key, start_key, key_size, value_size, thread_index);
+	}
+
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_entry);
+
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		delete workload_arr[thread_index];
+	}
+	delete[] workload_arr;
 }
 
 void run_random_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,

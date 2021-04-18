@@ -124,8 +124,8 @@ void ZipfianWorkload::generate_value_string(char *value_buffer) {
 	value_buffer[this->value_size - 1] = '\0';
 }
 
-InitWorkload::InitWorkload(long nr_entry, long key_size, long value_size, unsigned int seed)
-: Workload(key_size, value_size), nr_entry(nr_entry), cur_nr_entry(0), seed(seed) {
+InitWorkload::InitWorkload(long nr_entry, long start_key, long key_size, long value_size, unsigned int seed)
+: Workload(key_size, value_size), nr_entry(nr_entry), start_key(start_key), cur_nr_entry(0), seed(seed) {
 	sprintf(this->key_format, "%%0%ldld", key_size - 1);
 }
 
@@ -137,7 +137,7 @@ void InitWorkload::next_op(OperationType *type, char *key_buffer, char *value_bu
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 	*type = SET;
-	this->generate_key_string(key_buffer, this->cur_nr_entry++);
+	this->generate_key_string(key_buffer, this->start_key + this->cur_nr_entry++);
 	this->generate_value_string(value_buffer);
 }
 

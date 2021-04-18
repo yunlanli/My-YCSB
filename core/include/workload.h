@@ -86,6 +86,7 @@ private:
 struct InitWorkload : public Workload {
 	/* configuration */
 	long nr_entry;
+	long start_key;
 
 	/* constants */
 	static constexpr int key_format_len = 64;
@@ -95,7 +96,7 @@ struct InitWorkload : public Workload {
 	long cur_nr_entry;
 	char key_format[key_format_len];
 
-	InitWorkload(long nr_entry, long key_size, long value_size, unsigned int seed);
+	InitWorkload(long nr_entry, long start_key, long key_size, long value_size, unsigned int seed);
 	void next_op(OperationType *type, char *key_buffer, char *value_buffer) override;
 	bool has_next_op() override;
 private:

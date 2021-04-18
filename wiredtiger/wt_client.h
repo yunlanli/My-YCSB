@@ -2,6 +2,7 @@
 #define YCSB_WT_CLIENT_H
 
 #include "client.h"
+#include <wiredtiger.h>
 
 
 struct WiredTigerFactory;
@@ -17,6 +18,7 @@ struct WiredTigerClient : public Client {
 	static const char *cursor_bulk_config;
 
 	WiredTigerClient(WiredTigerFactory *factory, int id, const char *session_config, const char *cursor_config);
+	~WiredTigerClient();
 	int do_set(char *key_buffer, char *value_buffer) override;
 	int do_get(char *key_buffer, char **value) override;
 	int reset() override;
@@ -41,6 +43,7 @@ struct WiredTigerFactory : public ClientFactory {
 	WiredTigerFactory(const char *data_dir, const char *table_name, const char *conn_config,
 			  const char *session_config, const char *cursor_config, bool new_table,
 			  const char *create_table_config);
+	~WiredTigerFactory();
 	void update_session_config(const char *new_session_config);
 	void update_cursor_config(const char *new_cursor_config);
 	WiredTigerClient *create_client() override;

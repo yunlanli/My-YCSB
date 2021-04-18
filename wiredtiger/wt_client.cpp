@@ -27,6 +27,15 @@ WiredTigerClient::WiredTigerClient(WiredTigerFactory *factory, int id, const cha
 	}
 }
 
+WiredTigerClient::~WiredTigerClient() {
+	if (this->session != nullptr) {
+		int ret = this->session->close(session, nullptr);
+		if (ret != 0) {
+			throw std::invalid_argument("close failed");
+		}
+	}
+}
+
 int WiredTigerClient::do_get(char *key_buffer, char **value) {
 	int ret;
 	this->cursor->set_key(cursor, key_buffer);
@@ -66,6 +75,8 @@ void WiredTigerClient::close() {
 	if (ret != 0) {
 		throw std::invalid_argument("close failed");
 	}
+	this->cursor = nullptr;
+	this->session = nullptr;
 }
 
 const char *WiredTigerFactory::default_data_dir = "/users/yuhong/tigerhome";
@@ -117,6 +128,10 @@ WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_nam
 		}
 		session->close(session, nullptr);
 	}
+}
+
+WiredTigerFactory::~WiredTigerFactory() {
+	this->conn->close(this->conn, NULL);
 }
 
 void WiredTigerFactory::update_session_config(const char *new_session_config) {
