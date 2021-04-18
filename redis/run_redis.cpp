@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 	char *redis_addr = argv[PARAM_REDIS_ADDR];
 	int redis_port = atoi(argv[PARAM_REDIS_PORT]);
 
-	RedisFactory factory(redis_addr, redis_port, value_size);
+	RedisFactory factory(redis_addr, redis_port);
 
 	run_random_workload_with_op_measurement("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread,
 						read_ratio, nr_warm_up_op);
