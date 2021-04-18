@@ -43,7 +43,7 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
 	std::cout << std::flush;
 }
 
-void run_workload_with_op_measurement(const char *task, ClientFactory *factory, Workload **workload_arr, int nr_thread, long nr_op) {
+void run_workload_with_op_measurement(const char *task, ClientFactory *factory, Workload **workload_arr, int nr_thread, long nr_op, long max_progress) {
 	/* allocate resources */
 	Client **client_arr = new Client *[nr_thread];
 	std::thread **thread_arr = new std::thread *[nr_thread];
@@ -54,7 +54,7 @@ void run_workload_with_op_measurement(const char *task, ClientFactory *factory, 
 
 	/* start running workload */
 	measurement.start_measure();
-	measurement.set_max_progress(nr_op * nr_thread);
+	measurement.set_max_progress(max_progress);
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		thread_arr[thread_index] = new std::thread(worker_thread_fn, client_arr[thread_index], workload_arr[thread_index], &measurement);
 	}
@@ -83,7 +83,7 @@ void run_init_workload_with_op_measurement(const char *task, ClientFactory *fact
 		workload_arr[thread_index] = new InitWorkload(end_key - start_key, start_key, key_size, value_size, thread_index);
 	}
 
-	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_entry);
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_entry, nr_entry);
 
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		delete workload_arr[thread_index];
@@ -98,7 +98,7 @@ void run_random_workload_with_op_measurement(const char *task, ClientFactory *fa
 		workload_arr[thread_index] = new RandomWorkload(key_size, value_size, nr_entry, nr_op, read_ratio, thread_index);
 	}
 
-	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op);
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, nr_thread * nr_op);
 
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		delete workload_arr[thread_index];
@@ -115,7 +115,7 @@ void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *f
 		workload_arr[thread_index] = base_workload.clone(thread_index);
 	}
 
-	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op);
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, nr_thread * nr_op);
 
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		delete workload_arr[thread_index];
