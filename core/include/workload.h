@@ -78,7 +78,8 @@ struct ZipfianWorkload : public Workload {
 	ZipfianWorkload *clone(unsigned int new_seed);
 
 private:
-	long generate_zipfian_random_long();
+	static unsigned long fnv1_64_hash(unsigned long value);
+	unsigned long generate_zipfian_random_ulong();
 	void generate_key_string(char *key_buffer, long key);
 	void generate_value_string(char *value_buffer);
 };

@@ -68,7 +68,7 @@ ZipfianWorkload::ZipfianWorkload(long key_size, long value_size, long nr_entry, 
 	this->alpha = 1.0 / (1.0 - this->theta);
 	this->eta = (1 - pow(2.0 / (double) this->nr_entry, 1 - this->theta))
 	            / (1 - (this->zeta2theta / this->zetan));
-	this->generate_zipfian_random_long();
+	this->generate_zipfian_random_ulong();
 }
 
 bool ZipfianWorkload::has_next_op() {
@@ -83,7 +83,7 @@ void ZipfianWorkload::next_op(OperationType *type, char *key_buffer, char *value
 		*type = GET;
 	else
 		*type = SET;
-	long key = this->generate_zipfian_random_long() % this->nr_entry;
+	long key = (long) (this->generate_zipfian_random_ulong() % ((unsigned long) this->nr_entry));
 	this->generate_key_string(key_buffer, key);
 	if (!read)
 		this->generate_value_string(value_buffer);
@@ -102,15 +102,25 @@ ZipfianWorkload * ZipfianWorkload::clone(unsigned int new_seed) {
 	return copy;
 }
 
-long ZipfianWorkload::generate_zipfian_random_long() {
+unsigned long ZipfianWorkload::fnv1_64_hash(unsigned long value) {
+	uint64_t hash = 14695981039346656037ul;
+	uint8_t *p = (uint8_t *) &value;
+	for (int i = 0; i < sizeof(unsigned long); ++i, ++p) {
+		hash *= 1099511628211ul;
+		hash ^= *p;
+	}
+	return (unsigned long) hash;
+}
+
+unsigned long ZipfianWorkload::generate_zipfian_random_ulong() {
 	double u = this->generate_random_double(&this->seed);
 	double uz = u * this->zetan;
 	if (uz < 1)
 		return 0;
 	if (uz < 1 + pow(0.5, this->theta))
 		return 1;
-	long ret = (long) ((double)this->nr_entry * pow(this->eta * u - this->eta + 1, this->alpha));
-	return ret;
+	unsigned long ret = (unsigned long) ((double)this->nr_entry * pow(this->eta * u - this->eta + 1, this->alpha));
+	return ZipfianWorkload::fnv1_64_hash(ret);
 }
 
 void ZipfianWorkload::generate_key_string(char *key_buffer, long key) {
