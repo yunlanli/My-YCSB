@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/run_wt.dir/run_wt.cpp.o CMakeFiles/run_wt.dir/worker.cpp.o CMakeFiles/run_wt.dir/client.cpp.o CMakeFiles/run_wt.dir/workload.cpp.o CMakeFiles/run_wt.dir/measurement.cpp.o  -o run_wt -Wl,-rpath,/usr/local/lib /usr/local/lib/libwiredtiger.so -lpthread 
