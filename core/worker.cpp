@@ -91,11 +91,11 @@ void run_init_workload_with_op_measurement(const char *task, ClientFactory *fact
 	delete[] workload_arr;
 }
 
-void run_random_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
-                                             int nr_thread, double read_ratio, long nr_op) {
-	RandomWorkload **workload_arr = new RandomWorkload *[nr_thread];
+void run_uniform_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
+                                              int nr_thread, double read_ratio, long nr_op) {
+	UniformWorkload **workload_arr = new UniformWorkload *[nr_thread];
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
-		workload_arr[thread_index] = new RandomWorkload(key_size, value_size, nr_entry, nr_op, read_ratio, thread_index);
+		workload_arr[thread_index] = new UniformWorkload(key_size, value_size, nr_entry, nr_op, read_ratio, thread_index);
 	}
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, nr_thread * nr_op);
@@ -107,7 +107,7 @@ void run_random_workload_with_op_measurement(const char *task, ClientFactory *fa
 }
 
 void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
-					      int nr_thread, double read_ratio, double zipfian_constant, long nr_op) {
+                                              int nr_thread, double read_ratio, double zipfian_constant, long nr_op) {
 	ZipfianWorkload **workload_arr = new ZipfianWorkload *[nr_thread];
 	printf("ZipfianWorkload: start initializing zipfian variables, might take a while\n");
 	ZipfianWorkload base_workload(key_size, value_size, nr_entry, nr_op, read_ratio, zipfian_constant, 0);

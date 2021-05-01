@@ -81,11 +81,11 @@ void WiredTigerClient::close() {
 
 const char *WiredTigerFactory::default_data_dir = "/users/yuhong/tigerhome";
 const char *WiredTigerFactory::default_table_name = "lsm:karaage";
-const char *WiredTigerFactory::conn_default_config = "create,direct_io=[data],buffer_alignment=512B,mmap=false,"
-						     "cache_size=128M,eviction_trigger=95,eviction_target=80,"
-						     "eviction=(threads_max=8,threads_min=1)";
+const char *WiredTigerFactory::conn_default_config = "create,direct_io=[data,checkpoint],buffer_alignment=512B,mmap=false,"
+	"cache_size=128M,eviction_trigger=95,eviction_target=80,"
+	"eviction=(threads_max=8,threads_min=1)";
 const char *WiredTigerFactory::create_table_default_config = "key_format=S,value_format=S,allocation_size=512B,"
-							     "internal_page_max=512B,leaf_page_max=512B";
+	"internal_page_max=512B,leaf_page_max=512B";
 
 WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_name, const char *conn_config,
 				     const char *session_config, const char *cursor_config, bool new_table,

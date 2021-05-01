@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
 	run_init_workload_with_op_measurement("Initialization", &factory, nr_entry, key_size, value_size, 1);
 
 	factory.update_cursor_config(nullptr);
-	run_random_workload_with_op_measurement("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread,
-	                                        read_ratio, nr_warm_up_op);
-	run_random_workload_with_op_measurement("Random-Workload", &factory, nr_entry, key_size, value_size, nr_thread,
-	                                        read_ratio, nr_op);
+	run_uniform_workload_with_op_measurement("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread,
+	                                         read_ratio, nr_warm_up_op);
+	run_uniform_workload_with_op_measurement("Random-Workload", &factory, nr_entry, key_size, value_size, nr_thread,
+	                                         read_ratio, nr_op);
 }

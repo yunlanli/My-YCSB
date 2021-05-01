@@ -13,17 +13,17 @@ double Workload::generate_random_double(unsigned int *seedp) {
 	return ((double)rand_r(seedp)) / RAND_MAX;
 }
 
-RandomWorkload::RandomWorkload(long key_size, long value_size, long nr_entry,
+UniformWorkload::UniformWorkload(long key_size, long value_size, long nr_entry,
 			       long nr_op, double read_ratio, unsigned int seed)
 : Workload(key_size, value_size), nr_entry(nr_entry), nr_op(nr_op), read_ratio(read_ratio), seed(seed), cur_nr_op(0) {
 	sprintf(this->key_format, "%%0%ldld", key_size - 1);
 }
 
-bool RandomWorkload::has_next_op() {
+bool UniformWorkload::has_next_op() {
 	return this->cur_nr_op < this->nr_op;
 }
 
-void RandomWorkload::next_op(OperationType *type, char *key_buffer, char *value_buffer) {
+void UniformWorkload::next_op(OperationType *type, char *key_buffer, char *value_buffer) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 	bool read = this->generate_random_double(&this->seed) <= this->read_ratio;
@@ -38,11 +38,11 @@ void RandomWorkload::next_op(OperationType *type, char *key_buffer, char *value_
 	++this->cur_nr_op;
 }
 
-void RandomWorkload::generate_key_string(char *key_buffer, long key) {
+void UniformWorkload::generate_key_string(char *key_buffer, long key) {
 	sprintf(key_buffer, this->key_format, key);
 }
 
-void RandomWorkload::generate_value_string(char *value_buffer) {
+void UniformWorkload::generate_value_string(char *value_buffer) {
 	for (int i = 0; i < this->value_size - 1; ++i) {
 		value_buffer[i] = 'a' + (rand_r(&this->seed) % ('z' - 'a' + 1));
 	}
