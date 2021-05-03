@@ -40,12 +40,11 @@ int WiredTigerClient::do_get(char *key_buffer, char **value) {
 	int ret;
 	this->cursor->set_key(cursor, key_buffer);
 	ret = this->cursor->search(cursor);
-	if (ret != 0 && ret != WT_NOTFOUND) {
+	if (ret != 0) {
 		fprintf(stderr, "WiredTigerClient: search failed, ret: %s\n", wiredtiger_strerror(ret));
 		throw std::invalid_argument("search failed");
 	}
-	if (ret == 0)
-		this->cursor->get_value(cursor, value);
+	this->cursor->get_value(cursor, value);
 	return ret;
 }
 
