@@ -34,6 +34,6 @@ int main(int argc, char *argv[]) {
 
 	run_uniform_workload_with_op_measurement("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread,
 											 read_ratio, nr_warm_up_op);
-	run_uniform_workload_with_op_measurement("Random-Workload", &factory, nr_entry, key_size, value_size, nr_thread,
+	run_uniform_workload_with_op_measurement("Uniform-Workload", &factory, nr_entry, key_size, value_size, nr_thread,
 	                                         read_ratio, nr_op);
 }
