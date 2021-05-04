@@ -38,6 +38,7 @@ WiredTigerClient::~WiredTigerClient() {
 
 int WiredTigerClient::do_get(char *key_buffer, char **value) {
 	int ret;
+	this->cursor->reset(cursor);
 	this->cursor->set_key(cursor, key_buffer);
 	ret = this->cursor->search(cursor);
 	if (ret != 0) {
@@ -50,6 +51,7 @@ int WiredTigerClient::do_get(char *key_buffer, char **value) {
 
 int WiredTigerClient::do_set(char *key_buffer, char *value_buffer) {
 	int ret;
+	this->cursor->reset(cursor);
 	this->cursor->set_key(cursor, key_buffer);
 	this->cursor->set_value(cursor, value_buffer);
 	ret = this->cursor->insert(cursor);
@@ -81,7 +83,7 @@ void WiredTigerClient::close() {
 const char *WiredTigerFactory::default_data_dir = "/home/yuhongyi/nvme0n1/tigerhome";
 const char *WiredTigerFactory::default_table_name = "lsm:karaage";
 const char *WiredTigerFactory::conn_default_config = "create,direct_io=[data,checkpoint],buffer_alignment=512B,mmap=false,"
-	"cache_size=2G,eviction_trigger=95,eviction_target=80,"
+	"cache_size=128M,eviction_trigger=95,eviction_target=80,"
 	"eviction=(threads_max=6,threads_min=1)";
 const char *WiredTigerFactory::create_table_default_config = "key_format=S,value_format=S,allocation_size=512B,"
 	"internal_page_max=512B,leaf_page_max=512B";
