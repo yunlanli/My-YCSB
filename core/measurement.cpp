@@ -77,5 +77,8 @@ double OpMeasurement::get_latency_average(OperationType type) {
 }
 
 double OpMeasurement::get_latency_percentile(OperationType type, float percentile) {
+	if (this->final_latency_tree[type].size() == 0) {
+		return 0;
+	}
 	return this->final_latency_tree[type].get_percentile(percentile);
 }
