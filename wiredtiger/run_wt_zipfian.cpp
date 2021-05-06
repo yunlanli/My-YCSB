@@ -31,8 +31,10 @@ int main(int argc, char *argv[]) {
 	WiredTigerFactory factory(nullptr, nullptr, nullptr, nullptr, nullptr, false, nullptr);
 
 	factory.update_cursor_config(nullptr);
-	run_zipfian_workload_with_op_measurement("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread,
-						 read_ratio, zipfian_constant, nr_warm_up_op);
+	if (nr_warm_up_op != 0) {
+		run_zipfian_workload_with_op_measurement("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread,
+							 read_ratio, zipfian_constant, nr_warm_up_op);
+	}
 	run_zipfian_workload_with_op_measurement("Zipfian-Workload", &factory, nr_entry, key_size, value_size, nr_thread,
 						 read_ratio, zipfian_constant, nr_op);
 }
