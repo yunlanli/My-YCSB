@@ -19,13 +19,21 @@ void OpMeasurement::start_measure() {
 }
 
 void OpMeasurement::finish_measure() {
+	for (int i = 0; i < NR_OP_TYPE; ++i) {
+		for (const auto& map_it : this->per_client_latency_list) {
+			for (const auto& list_it : map_it.second[i]) {
+				this->final_latency_tree[i].insert(list_it);
+			}
+		}
+	}
 	this->end_time = std::chrono::steady_clock::now();
 	this->finished = true;
 }
 
-void OpMeasurement::record_op(OperationType type) {
+void OpMeasurement::record_op(OperationType type, double latency, int id) {
 	++this->op_count_arr[type];
 	++this->rt_op_count_arr[type];
+	this->per_client_latency_list[id][type].push_back(latency);
 }
 
 void OpMeasurement::record_progress(long progress_delta) {
@@ -56,4 +64,18 @@ void OpMeasurement::get_rt_throughput(double *throughput_arr) {
 
 double OpMeasurement::get_progress_percent() {
 	return ((double) this->cur_progress) / ((double) this->max_progress);
+}
+
+double OpMeasurement::get_latency_average(OperationType type) {
+	double latency_sum = 0;
+	avl_tree<double>::iterator iterator(this->final_latency_tree[type]);
+	while (iterator) {
+		latency_sum += *iterator;
+		++iterator;
+	}
+	return latency_sum / (double) this->final_latency_tree[type].size();
+}
+
+double OpMeasurement::get_latency_percentile(OperationType type, float percentile) {
+	return this->final_latency_tree[type].get_percentile(percentile);
 }

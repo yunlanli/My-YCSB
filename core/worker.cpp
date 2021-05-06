@@ -4,9 +4,11 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 	OperationType type;
 	char *key_buffer = new char[workload->key_size];
 	char *value_buffer= new char[workload->value_size];
+	std::chrono::steady_clock::time_point start_time, finish_time;
 
 	while (workload->has_next_op()) {
 		workload->next_op(&type, key_buffer, value_buffer);
+		start_time = std::chrono::steady_clock::now();
 		switch (type) {
 		case SET:
 			client->do_set(key_buffer, value_buffer);
@@ -18,7 +20,9 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 		default:
 			throw std::invalid_argument("invalid op type");
 		}
-		measurement->record_op(type);
+		finish_time = std::chrono::steady_clock::now();
+		long latency = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+		measurement->record_op(type, (double) latency, client->id);
 		measurement->record_progress(1);
 	}
 	delete[] key_buffer;
@@ -40,6 +44,9 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
 	printf("%s overall: read throughput %.2lf ops/sec, write throughput %.2lf ops/sec, total throughput %.2lf ops/sec\n",
 	       task, measurement->get_throughput(GET), measurement->get_throughput(SET),
 	       measurement->get_throughput(GET) + measurement->get_throughput(SET));
+	printf("%s overall: read average latency %.2lf ns, read p99 latency %.2lf ns, write average latency %.2lf ns, write p99 latency %.2lf ns\n",
+	       task, measurement->get_latency_average(GET), measurement->get_latency_percentile(GET, 0.99),
+	       measurement->get_latency_average(SET), measurement->get_latency_percentile(SET, 0.99));
 	std::cout << std::flush;
 }
 
