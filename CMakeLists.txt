@@ -13,9 +13,11 @@ set(CoreSource core/client.cpp
 
 set(WiredTigerClientSource wiredtiger/wt_client.cpp)
 add_executable(init_wt ${CoreSource} ${WiredTigerClientSource} wiredtiger/init_wt.cpp)
-add_executable(run_wt ${CoreSource} ${WiredTigerClientSource} wiredtiger/run_wt.cpp)
+add_executable(run_wt_uniform ${CoreSource} ${WiredTigerClientSource} wiredtiger/run_wt_uniform.cpp)
+add_executable(run_wt_zipfian ${CoreSource} ${WiredTigerClientSource} wiredtiger/run_wt_zipfian.cpp)
 target_link_libraries(init_wt /usr/local/lib/libwiredtiger.so pthread)
-target_link_libraries(run_wt /usr/local/lib/libwiredtiger.so pthread)
+target_link_libraries(run_wt_uniform /usr/local/lib/libwiredtiger.so pthread)
+target_link_libraries(run_wt_zipfian /usr/local/lib/libwiredtiger.so pthread)
 
 set(RedisClientSource redis/redis_client.cpp)
 add_executable(init_redis ${CoreSource} ${RedisClientSource} redis/init_redis.cpp)
