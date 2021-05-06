@@ -52,7 +52,7 @@ void UniformWorkload::generate_value_string(char *value_buffer) {
 ZipfianWorkload::ZipfianWorkload(long key_size, long value_size, long nr_entry, long nr_op, double read_ratio,
                                  double zipfian_constant, unsigned int seed)
 : Workload(key_size, value_size), nr_entry(nr_entry), nr_op(nr_op), read_ratio(read_ratio),
-  zipfian_constant(zipfian_constant), seed(seed) {
+  zipfian_constant(zipfian_constant), seed(seed), cur_nr_op(0) {
 	sprintf(this->key_format, "%%0%ldld", key_size - 1);
 
 	/* zipfian-related initialization */
