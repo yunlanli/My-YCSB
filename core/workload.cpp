@@ -205,7 +205,12 @@ void LatestWorkload::next_op(OperationType *type, char *key_buffer, char *value_
 		key = this->cur_ack_key - key - 1;
 	} else {
 		*type = SET;
-		key = this->cur_ack_key++;
+		if (this->cur_ack_key >= this->nr_entry) {
+			key = (long) (this->generate_zipfian_random_ulong(false) % (this->cur_ack_key));
+			key = this->cur_ack_key - key - 1;
+		} else {
+			key = this->cur_ack_key++;
+		}
 	}
 	this->generate_key_string(key_buffer, key);
 	if (!read)

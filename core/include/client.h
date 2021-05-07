@@ -11,8 +11,12 @@ struct Client {
 	ClientFactory *factory;
 
 	Client(int id, ClientFactory *factory);
-	virtual int do_set(char *key_buffer, char *value_buffer) = 0;
-	virtual int do_get(char *key_buffer, char **value) = 0;
+	virtual int do_set(char *key_buffer, char *value_buffer) {
+		throw std::invalid_argument("not implemented");
+	};
+	virtual int do_get(char *key_buffer, char **value) {
+		throw std::invalid_argument("not implemented");
+	};
 	virtual int reset() = 0;
 	virtual void close() = 0;
 };
