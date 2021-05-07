@@ -79,7 +79,7 @@ struct ZipfianWorkload : public Workload {
 
 private:
 	static unsigned long fnv1_64_hash(unsigned long value);
-	unsigned long generate_zipfian_random_ulong();
+	unsigned long generate_zipfian_random_ulong(bool hash);
 	void generate_key_string(char *key_buffer, long key);
 	void generate_value_string(char *value_buffer);
 };
@@ -101,6 +101,40 @@ struct InitWorkload : public Workload {
 	void next_op(OperationType *type, char *key_buffer, char *value_buffer) override;
 	bool has_next_op() override;
 private:
+	void generate_key_string(char *key_buffer, long key);
+	void generate_value_string(char *value_buffer);
+};
+
+struct LatestWorkload : public Workload {
+	/* configuration */
+	long nr_entry;
+	long nr_op;
+	double read_ratio;
+	double zipfian_constant;
+
+	/* constants */
+	static constexpr int key_format_len = 64;
+
+	/* states */
+	unsigned int seed;
+	long cur_nr_op;
+	long cur_ack_key;
+	char key_format[key_format_len];
+
+	double zetan;
+	double theta;
+	double zeta2theta;
+	double alpha;
+	double eta;
+
+	LatestWorkload(long key_size, long value_size, long nr_entry, long nr_op, double read_ratio, double zipfian_constant, unsigned int seed);
+	void next_op(OperationType *type, char *key_buffer, char *value_buffer) override;
+	bool has_next_op() override;
+	LatestWorkload *clone(unsigned int new_seed);
+
+private:
+	static unsigned long fnv1_64_hash(unsigned long value);
+	unsigned long generate_zipfian_random_ulong(bool hash);
 	void generate_key_string(char *key_buffer, long key);
 	void generate_value_string(char *value_buffer);
 };

@@ -129,3 +129,20 @@ void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *f
 	}
 	delete[] workload_arr;
 }
+
+void run_latest_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
+					     int nr_thread, double read_ratio, double zipfian_constant, long nr_op) {
+	LatestWorkload **workload_arr = new LatestWorkload *[nr_thread];
+	printf("LatestWorkload: start initializing zipfian variables, might take a while\n");
+	LatestWorkload base_workload(key_size, value_size, nr_entry, nr_op, read_ratio, zipfian_constant, 0);
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		workload_arr[thread_index] = base_workload.clone(thread_index);
+	}
+
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, nr_thread * nr_op);
+
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		delete workload_arr[thread_index];
+	}
+	delete[] workload_arr;
+}
