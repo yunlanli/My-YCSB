@@ -67,6 +67,9 @@ double OpMeasurement::get_progress_percent() {
 }
 
 double OpMeasurement::get_latency_average(OperationType type) {
+	if (this->final_latency_tree[type].size() == 0) {
+		return 0;
+	}
 	double latency_sum = 0;
 	avl_tree<double>::iterator iterator(this->final_latency_tree[type]);
 	while (iterator) {
