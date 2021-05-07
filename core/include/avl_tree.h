@@ -330,7 +330,7 @@ public:
 	};
 
 	T get_percentile(float percentile) {
-		if (this->size() == 0 || percentile < 0 || percentile > 0) {
+		if (this->size() == 0 || percentile < 0 || percentile > 1) {
 			throw std::invalid_argument("get_percentile");
 		}
 		float exact_index = (float)(this->size() - 1) * percentile;
