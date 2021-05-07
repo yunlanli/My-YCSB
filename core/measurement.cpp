@@ -20,11 +20,10 @@ void OpMeasurement::start_measure() {
 
 void OpMeasurement::finish_measure() {
 	for (int i = 0; i < NR_OP_TYPE; ++i) {
-		for (const auto& map_it : this->per_client_latency_list) {
-			for (const auto& list_it : map_it.second[i]) {
-				this->final_latency_tree[i].insert(list_it);
-			}
+		for (const auto& client_vec : this->per_client_latency_vec) {
+			this->final_latency_vec[i].insert(this->final_latency_vec[i].end(), client_vec.second->begin(), client_vec.second->end());
 		}
+		std::sort(this->final_latency_vec[i].begin(), this->final_latency_vec[i].end());
 	}
 	this->end_time = std::chrono::steady_clock::now();
 	this->finished = true;
@@ -33,7 +32,7 @@ void OpMeasurement::finish_measure() {
 void OpMeasurement::record_op(OperationType type, double latency, int id) {
 	++this->op_count_arr[type];
 	++this->rt_op_count_arr[type];
-	this->per_client_latency_list[id][type].push_back(latency);
+	this->per_client_latency_vec[id][type].push_back(latency);
 }
 
 void OpMeasurement::record_progress(long progress_delta) {
@@ -67,21 +66,24 @@ double OpMeasurement::get_progress_percent() {
 }
 
 double OpMeasurement::get_latency_average(OperationType type) {
-	if (this->final_latency_tree[type].size() == 0) {
+	if (this->final_latency_vec[type].empty()) {
 		return 0;
 	}
-	double latency_sum = 0;
-	avl_tree<double>::iterator iterator(this->final_latency_tree[type]);
-	while (iterator) {
-		latency_sum += *iterator;
-		++iterator;
-	}
-	return latency_sum / (double) this->final_latency_tree[type].size();
+	double latency_sum = std::accumulate(this->final_latency_vec[type].begin(), this->final_latency_vec[type].end(), 0.0);
+	return latency_sum / (double) this->final_latency_vec[type].size();
 }
 
 double OpMeasurement::get_latency_percentile(OperationType type, float percentile) {
-	if (this->final_latency_tree[type].size() == 0) {
+	if (this->final_latency_vec[type].empty()) {
 		return 0;
 	}
-	return this->final_latency_tree[type].get_percentile(percentile);
+	double exact_index = (double)(this->final_latency_vec[type].size() - 1) * percentile;
+	double left_index = floor(exact_index);
+	double right_index = ceil(exact_index);
+
+	double left_value = this->final_latency_vec[type][(long) left_index];
+	double right_value = this->final_latency_vec[type][(long) right_index];
+
+	double value = left_value + (exact_index - left_index) * (right_value - left_value);
+	return value;
 }

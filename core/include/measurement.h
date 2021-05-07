@@ -7,6 +7,11 @@
 #include <atomic>
 #include <unordered_map>
 #include <list>
+#include <array>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+
 
 struct OpMeasurement {
 	std::atomic<long> op_count_arr[NR_OP_TYPE];
@@ -20,8 +25,8 @@ struct OpMeasurement {
 	std::atomic<long> cur_progress;
 	std::atomic<bool> finished;
 
-	std::unordered_map<int, std::list<double>[NR_OP_TYPE]> per_client_latency_list;
-	avl_tree<double> final_latency_tree[NR_OP_TYPE];
+	std::unordered_map<int, std::vector<double>[NR_OP_TYPE]> per_client_latency_vec;
+	std::vector<double> final_latency_vec[NR_OP_TYPE];
 
 	OpMeasurement();
 	void set_max_progress(long new_max_progress);
