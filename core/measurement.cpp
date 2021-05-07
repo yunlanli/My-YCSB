@@ -21,7 +21,7 @@ void OpMeasurement::start_measure() {
 void OpMeasurement::finish_measure() {
 	for (int i = 0; i < NR_OP_TYPE; ++i) {
 		for (const auto& client_vec : this->per_client_latency_vec) {
-			this->final_latency_vec[i].insert(this->final_latency_vec[i].end(), client_vec.second->begin(), client_vec.second->end());
+			this->final_latency_vec[i].insert(this->final_latency_vec[i].end(), client_vec.second[i].begin(), client_vec.second[i].end());
 		}
 		std::sort(this->final_latency_vec[i].begin(), this->final_latency_vec[i].end());
 	}
