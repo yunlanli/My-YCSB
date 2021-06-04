@@ -99,6 +99,7 @@ ZipfianWorkload * ZipfianWorkload::clone(unsigned int new_seed) {
 	copy->zeta2theta = this->zeta2theta;
 	copy->alpha = this->alpha;
 	copy->eta = this->eta;
+	copy->nr_entry = this->nr_entry;
 	return copy;
 }
 
@@ -227,6 +228,7 @@ LatestWorkload * LatestWorkload::clone(unsigned int new_seed) {
 	copy->zeta2theta = this->zeta2theta;
 	copy->alpha = this->alpha;
 	copy->eta = this->eta;
+	copy->nr_entry = this->nr_entry;
 	return copy;
 }
 
