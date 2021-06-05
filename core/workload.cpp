@@ -213,6 +213,7 @@ void LatestWorkload::next_op(OperationType *type, char *key_buffer, char *value_
 			key = this->cur_ack_key++;
 		}
 	}
+	key = LatestWorkload::fnv1_64_hash(key);
 	this->generate_key_string(key_buffer, key);
 	if (!read)
 		this->generate_value_string(value_buffer);
