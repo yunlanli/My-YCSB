@@ -62,10 +62,8 @@ int WiredTigerClient::do_set(char *key_buffer, char *value_buffer) {
 			fprintf(stderr, "WiredTigerClient: search failed, ret: %s\n", wiredtiger_strerror(ret));
 			throw std::invalid_argument("search failed");
 		}
-		this->cursor->get_value(cursor, value);
+		this->cursor->get_value(cursor, &value);
 		/* write */
-		this->cursor->reset(cursor);
-		this->cursor->set_key(cursor, key_buffer);
 		this->cursor->set_value(cursor, value_buffer);
 		ret = this->cursor->insert(cursor);
 		if (ret != 0) {
