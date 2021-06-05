@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 	long nr_warm_up_op = atol(argv[PARAM_WARM_UP_OP]);
 	long nr_op = atol(argv[PARAM_NR_OP]);
 
-	WiredTigerFactory factory(nullptr, nullptr, nullptr, nullptr, nullptr, false, nullptr, false);
+	WiredTigerFactory factory(nullptr, nullptr, nullptr, nullptr, nullptr, false, nullptr, true);
 
 	factory.update_cursor_config(nullptr);
 	if (nr_warm_up_op != 0) {
