@@ -1,5 +1,9 @@
 #include "workload.h"
 
+const char* operation_type_name[] = {
+	"UPDATE", "INSERT", "READ", "SCAN", "READ_MODIFY_WRITE"
+};
+
 Workload::Workload(long key_size, long value_size)
 : key_size(key_size), value_size(value_size) {
 	;

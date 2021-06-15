@@ -18,9 +18,7 @@ enum OperationType {
 	NR_OP_TYPE,
 };
 
-const char* operation_type_name[] = {
-	"UPDATE", "INSERT", "READ", "SCAN", "READ_MODIFY_WRITE"
-};
+extern const char* operation_type_name[];
 
 struct Operation {
 	OperationType type;
