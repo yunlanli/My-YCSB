@@ -4,7 +4,7 @@ const char *WiredTigerClient::session_default_config = "isolation=read-uncommitt
 const char *WiredTigerClient::cursor_default_config = nullptr;
 const char *WiredTigerClient::cursor_bulk_config = "bulk";
 
-WiredTigerClient::WiredTigerClient(WiredTigerFactory *factory, int id, const char *session_config, const char *cursor_config, bool read_modify_write)
+WiredTigerClient::WiredTigerClient(WiredTigerFactory *factory, int id, const char *session_config, const char *cursor_config)
 	: Client(id, factory) {
 	if (session_config == nullptr)
 		session_config = WiredTigerClient::session_default_config;
@@ -12,7 +12,6 @@ WiredTigerClient::WiredTigerClient(WiredTigerFactory *factory, int id, const cha
 		cursor_config = WiredTigerClient::cursor_default_config;
 	this->session_config = session_config;
 	this->cursor_config = cursor_config;
-	this->read_modify_write = read_modify_write;
 
 	int ret;
 	ret = factory->conn->open_session(factory->conn, nullptr, this->session_config, &this->session);
@@ -37,7 +36,7 @@ WiredTigerClient::~WiredTigerClient() {
 	}
 }
 
-int WiredTigerClient::do_get(char *key_buffer, char **value) {
+int WiredTigerClient::do_read(char *key_buffer, char **value) {
 	int ret;
 	this->cursor->reset(cursor);
 	this->cursor->set_key(cursor, key_buffer);
@@ -50,34 +49,64 @@ int WiredTigerClient::do_get(char *key_buffer, char **value) {
 	return ret;
 }
 
-int WiredTigerClient::do_set(char *key_buffer, char *value_buffer) {
+int WiredTigerClient::do_update(char *key_buffer, char *value_buffer) {
 	int ret;
 	char *value;
 	this->cursor->reset(cursor);
-	if (this->read_modify_write) {
-		/* read */
-		this->cursor->set_key(cursor, key_buffer);
-		ret = this->cursor->search(cursor);
+	this->cursor->set_key(cursor, key_buffer);
+	this->cursor->set_value(cursor, value_buffer);
+	ret = this->cursor->insert(cursor);
+	if (ret != 0) {
+		fprintf(stderr, "WiredTigerClient: insert failed, ret: %s\n", wiredtiger_strerror(ret));
+		throw std::invalid_argument("insert failed");
+	}
+	return ret;
+}
+
+int WiredTigerClient::do_insert(char *key_buffer, char *value_buffer) {
+	return this->do_update(key_buffer, value_buffer);
+}
+
+int WiredTigerClient::do_read_modify_write(char *key_buffer, char *value_buffer) {
+	int ret;
+	char *value;
+	this->cursor->reset(cursor);
+	/* read */
+	this->cursor->set_key(cursor, key_buffer);
+	ret = this->cursor->search(cursor);
+	if (ret != 0) {
+		fprintf(stderr, "WiredTigerClient: search failed, ret: %s\n", wiredtiger_strerror(ret));
+		throw std::invalid_argument("search failed");
+	}
+	this->cursor->get_value(cursor, &value);
+	/* write */
+	this->cursor->set_value(cursor, value_buffer);
+	ret = this->cursor->insert(cursor);
+	if (ret != 0) {
+		fprintf(stderr, "WiredTigerClient: insert failed, ret: %s\n", wiredtiger_strerror(ret));
+		throw std::invalid_argument("insert failed");
+	}
+	return ret;
+}
+
+int WiredTigerClient::do_scan(char *key_buffer, long scan_length) {
+	int ret;
+	char *value;
+	this->cursor->reset(cursor);
+	this->cursor->set_key(cursor, key_buffer);
+	ret = this->cursor->search(cursor);
+	if (ret != 0) {
+		fprintf(stderr, "WiredTigerClient: search failed, ret: %s\n", wiredtiger_strerror(ret));
+		throw std::invalid_argument("search failed");
+	}
+	this->cursor->get_value(cursor, &value);
+	for (long i = 0; i < scan_length - 1; ++i) {
+		ret = this->cursor->next(cursor);
 		if (ret != 0) {
-			fprintf(stderr, "WiredTigerClient: search failed, ret: %s\n", wiredtiger_strerror(ret));
-			throw std::invalid_argument("search failed");
+			fprintf(stderr, "WiredTigerClient: next failed, ret: %s\n", wiredtiger_strerror(ret));
+			throw std::invalid_argument("next failed");
 		}
 		this->cursor->get_value(cursor, &value);
-		/* write */
-		this->cursor->set_value(cursor, value_buffer);
-		ret = this->cursor->insert(cursor);
-		if (ret != 0) {
-			fprintf(stderr, "WiredTigerClient: insert failed, ret: %s\n", wiredtiger_strerror(ret));
-			throw std::invalid_argument("insert failed");
-		}
-	} else {
-		this->cursor->set_key(cursor, key_buffer);
-		this->cursor->set_value(cursor, value_buffer);
-		ret = this->cursor->insert(cursor);
-		if (ret != 0) {
-			fprintf(stderr, "WiredTigerClient: insert failed, ret: %s\n", wiredtiger_strerror(ret));
-			throw std::invalid_argument("insert failed");
-		}
 	}
 	return ret;
 }
@@ -110,7 +139,7 @@ const char *WiredTigerFactory::create_table_default_config = "key_format=S,value
 
 WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_name, const char *conn_config,
 				     const char *session_config, const char *cursor_config, bool new_table,
-				     const char *create_table_config, bool read_modify_write)
+				     const char *create_table_config)
 	: client_id(0) {
 	if (data_dir == nullptr)
 		data_dir = WiredTigerFactory::default_data_dir;
@@ -126,7 +155,6 @@ WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_nam
 	this->session_config = session_config;
 	this->cursor_config = cursor_config;
 	this->create_table_config = create_table_config;
-	this->read_modify_write = read_modify_write;
 
 	int ret;
 	ret = wiredtiger_open(this->data_dir, nullptr, this->conn_config, &this->conn);
@@ -165,7 +193,7 @@ void WiredTigerFactory::update_cursor_config(const char *new_cursor_config) {
 }
 
 WiredTigerClient * WiredTigerFactory::create_client() {
-	return new WiredTigerClient(this, this->client_id++, this->session_config, this->cursor_config, this->read_modify_write);
+	return new WiredTigerClient(this, this->client_id++, this->session_config, this->cursor_config);
 }
 
 void WiredTigerFactory::destroy_client(Client *client) {

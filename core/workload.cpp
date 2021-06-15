@@ -13,9 +13,9 @@ double Workload::generate_random_double(unsigned int *seedp) {
 	return ((double)rand_r(seedp)) / RAND_MAX;
 }
 
-UniformWorkload::UniformWorkload(long key_size, long value_size, long nr_entry,
-			       long nr_op, double read_ratio, unsigned int seed)
-: Workload(key_size, value_size), nr_entry(nr_entry), nr_op(nr_op), read_ratio(read_ratio), seed(seed), cur_nr_op(0) {
+UniformWorkload::UniformWorkload(long key_size, long value_size, long scan_length, long nr_entry,
+                                 long nr_op, struct OpProportion op_prop, unsigned int seed)
+: Workload(key_size, value_size), scan_length(scan_length), nr_entry(nr_entry), nr_op(nr_op), op_prop(op_prop), seed(seed), cur_nr_op(0) {
 	sprintf(this->key_format, "%%0%ldld", key_size - 1);
 }
 
@@ -23,18 +23,30 @@ bool UniformWorkload::has_next_op() {
 	return this->cur_nr_op < this->nr_op;
 }
 
-void UniformWorkload::next_op(OperationType *type, char *key_buffer, char *value_buffer) {
+void UniformWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
-	bool read = this->generate_random_double(&this->seed) <= this->read_ratio;
-	if (read)
-		*type = GET;
-	else
-		*type = SET;
+	double op_random = this->generate_random_double(&this->seed);
+	double running_sum = 0;
+	if (running_sum += this->op_prop.op[UPDATE], op_random <= running_sum) {
+		op->type = UPDATE;
+		this->generate_value_string(op->value_buffer);
+	} else if (running_sum += this->op_prop.op[INSERT], op_random <= running_sum) {
+		op->type = INSERT;
+		this->generate_value_string(op->value_buffer);
+	} else if (running_sum += this->op_prop.op[READ], op_random <= running_sum) {
+		op->type = READ;
+	} else if (running_sum += this->op_prop.op[SCAN], op_random <= running_sum) {
+		op->type = SCAN;
+		op->scan_length = this->scan_length;
+	} else if (running_sum += this->op_prop.op[READ_MODIFY_WRITE], op_random <= running_sum) {
+		op->type = READ_MODIFY_WRITE;
+		this->generate_value_string(op->value_buffer);
+	} else {
+		throw std::invalid_argument("failed to generate an operation");
+	}
 	long key = this->generate_random_long(&this->seed) % this->nr_entry;
-	this->generate_key_string(key_buffer, key);
-	if (!read)
-		this->generate_value_string(value_buffer);
+	this->generate_key_string(op->key_buffer, key);
 	++this->cur_nr_op;
 }
 
@@ -49,11 +61,11 @@ void UniformWorkload::generate_value_string(char *value_buffer) {
 	value_buffer[this->value_size - 1] = '\0';
 }
 
-ZipfianWorkload::ZipfianWorkload(long key_size, long value_size, long nr_entry, long nr_op, double read_ratio,
-                                 double zipfian_constant, unsigned int seed)
-: Workload(key_size, value_size), nr_entry(nr_entry), nr_op(nr_op), read_ratio(read_ratio),
+ZipfianWorkload::ZipfianWorkload(long key_size, long value_size, long scan_length, long nr_entry, long nr_op,
+                                 struct OpProportion op_prop, double zipfian_constant, unsigned int seed)
+: Workload(key_size, value_size), scan_length(scan_length), nr_entry(nr_entry), nr_op(nr_op), op_prop(op_prop),
   zipfian_constant(zipfian_constant), seed(seed), cur_nr_op(0) {
-	sprintf(this->key_format, "%%0%ldld", key_size - 1);
+	sprintf(this->key_format, "%%0%ldlu", key_size - 1);
 
 	/* zipfian-related initialization */
 	this->zetan = 0;
@@ -75,25 +87,37 @@ bool ZipfianWorkload::has_next_op() {
 	return this->cur_nr_op < this->nr_op;
 }
 
-void ZipfianWorkload::next_op(OperationType *type, char *key_buffer, char *value_buffer) {
+void ZipfianWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
-	bool read = this->generate_random_double(&this->seed) <= this->read_ratio;
-	if (read)
-		*type = GET;
-	else
-		*type = SET;
-	long key = (long) (this->generate_zipfian_random_ulong(true) % ((unsigned long) this->nr_entry));
-	this->generate_key_string(key_buffer, key);
-	if (!read)
-		this->generate_value_string(value_buffer);
+	double op_random = this->generate_random_double(&this->seed);
+	double running_sum = 0;
+	if (running_sum += this->op_prop.op[UPDATE], op_random <= running_sum) {
+		op->type = UPDATE;
+		this->generate_value_string(op->value_buffer);
+	} else if (running_sum += this->op_prop.op[INSERT], op_random <= running_sum) {
+		op->type = INSERT;
+		this->generate_value_string(op->value_buffer);
+	} else if (running_sum += this->op_prop.op[READ], op_random <= running_sum) {
+		op->type = READ;
+	} else if (running_sum += this->op_prop.op[SCAN], op_random <= running_sum) {
+		op->type = SCAN;
+		op->scan_length = this->scan_length;
+	} else if (running_sum += this->op_prop.op[READ_MODIFY_WRITE], op_random <= running_sum) {
+		op->type = READ_MODIFY_WRITE;
+		this->generate_value_string(op->value_buffer);
+	} else {
+		throw std::invalid_argument("failed to generate an operation");
+	}
+	unsigned long key = this->generate_zipfian_random_ulong(true) % ((unsigned long) this->nr_entry);
+	this->generate_key_string(op->key_buffer, key);
 	++this->cur_nr_op;
 }
 
 ZipfianWorkload * ZipfianWorkload::clone(unsigned int new_seed) {
 	/* create a new ZipfianWorkload with a cheap nr_entry */
-	ZipfianWorkload *copy = new ZipfianWorkload(this->key_size, this->value_size, 3, this->nr_op,
-	                                            this->read_ratio, this->zipfian_constant, new_seed);
+	ZipfianWorkload *copy = new ZipfianWorkload(this->key_size, this->value_size, this->scan_length, 3, this->nr_op,
+	                                            this->op_prop, this->zipfian_constant, new_seed);
 	copy->zetan = this->zetan;
 	copy->theta = this->theta;
 	copy->zeta2theta = this->zeta2theta;
@@ -127,7 +151,7 @@ unsigned long ZipfianWorkload::generate_zipfian_random_ulong(bool hash) {
 		return ret;
 }
 
-void ZipfianWorkload::generate_key_string(char *key_buffer, long key) {
+void ZipfianWorkload::generate_key_string(char *key_buffer, unsigned long key) {
 	sprintf(key_buffer, this->key_format, key);
 }
 
@@ -147,12 +171,12 @@ bool InitWorkload::has_next_op() {
 	return this->cur_nr_entry < this->nr_entry;
 }
 
-void InitWorkload::next_op(OperationType *type, char *key_buffer, char *value_buffer) {
+void InitWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
-	*type = SET;
-	this->generate_key_string(key_buffer, this->start_key + this->cur_nr_entry++);
-	this->generate_value_string(value_buffer);
+	op->type = INSERT;
+	this->generate_key_string(op->key_buffer, this->start_key + this->cur_nr_entry++);
+	this->generate_value_string(op->value_buffer);
 }
 
 void InitWorkload::generate_key_string(char *key_buffer, long key) {
@@ -167,10 +191,10 @@ void InitWorkload::generate_value_string(char *value_buffer) {
 }
 
 LatestWorkload::LatestWorkload(long key_size, long value_size, long nr_entry, long nr_op, double read_ratio,
-			       double zipfian_constant, unsigned int seed)
+                               double zipfian_constant, unsigned int seed)
 	: Workload(key_size, value_size), nr_entry(nr_entry), nr_op(nr_op), read_ratio(read_ratio),
 	  zipfian_constant(zipfian_constant), seed(seed), cur_nr_op(0), cur_ack_key(0) {
-	sprintf(this->key_format, "%%0%ldld", key_size - 1);
+	sprintf(this->key_format, "%%0%ldlu", key_size - 1);
 
 	/* zipfian-related initialization */
 	this->zetan = 0;
@@ -192,31 +216,32 @@ bool LatestWorkload::has_next_op() {
 	return this->cur_nr_op < this->nr_op;
 }
 
-void LatestWorkload::next_op(OperationType *type, char *key_buffer, char *value_buffer) {
+void LatestWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 	bool read = this->generate_random_double(&this->seed) <= this->read_ratio;
 	if (this->cur_ack_key == 0) {
 		read = false;
 	}
-	long key;
+	unsigned long key;
 	if (read) {
-		*type = GET;
-		key = (long) (this->generate_zipfian_random_ulong(false) % (this->cur_ack_key));
+		op->type = READ;
+		key = this->generate_zipfian_random_ulong(false) % (this->cur_ack_key);
 		key = this->cur_ack_key - key - 1;
 	} else {
-		*type = SET;
 		if (this->cur_ack_key >= this->nr_entry) {
-			key = (long) (this->generate_zipfian_random_ulong(false) % (this->cur_ack_key));
+			op->type = UPDATE;
+			key = this->generate_zipfian_random_ulong(false) % (this->cur_ack_key);
 			key = this->cur_ack_key - key - 1;
 		} else {
+			op->type = INSERT;
 			key = this->cur_ack_key++;
 		}
 	}
 	key = LatestWorkload::fnv1_64_hash(key);
-	this->generate_key_string(key_buffer, key);
+	this->generate_key_string(op->key_buffer, key);
 	if (!read)
-		this->generate_value_string(value_buffer);
+		this->generate_value_string(op->value_buffer);
 	++this->cur_nr_op;
 }
 
@@ -257,7 +282,7 @@ unsigned long LatestWorkload::generate_zipfian_random_ulong(bool hash) {
 		return ret;
 }
 
-void LatestWorkload::generate_key_string(char *key_buffer, long key) {
+void LatestWorkload::generate_key_string(char *key_buffer, unsigned long key) {
 	sprintf(key_buffer, this->key_format, key);
 }
 

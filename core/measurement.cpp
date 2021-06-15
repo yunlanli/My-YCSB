@@ -7,6 +7,7 @@ OpMeasurement::OpMeasurement() {
 	}
 	this->cur_progress = 0;
 	this->finished = false;
+	this->final_result_lock.lock();
 }
 
 void OpMeasurement::set_max_progress(long new_max_progress) {
@@ -19,6 +20,7 @@ void OpMeasurement::start_measure() {
 }
 
 void OpMeasurement::finish_measure() {
+	this->finished = true;
 	this->end_time = std::chrono::steady_clock::now();
 	for (int i = 0; i < NR_OP_TYPE; ++i) {
 		for (const auto& client_vec : this->per_client_latency_vec) {
@@ -26,7 +28,7 @@ void OpMeasurement::finish_measure() {
 		}
 		std::sort(this->final_latency_vec[i].begin(), this->final_latency_vec[i].end());
 	}
-	this->finished = true;
+	this->final_result_lock.unlock();
 }
 
 void OpMeasurement::record_op(OperationType type, double latency, int id) {

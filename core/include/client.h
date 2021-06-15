@@ -11,10 +11,19 @@ struct Client {
 	ClientFactory *factory;
 
 	Client(int id, ClientFactory *factory);
-	virtual int do_set(char *key_buffer, char *value_buffer) {
+	virtual int do_update(char *key_buffer, char *value_buffer) {
 		throw std::invalid_argument("not implemented");
 	};
-	virtual int do_get(char *key_buffer, char **value) {
+	virtual int do_insert(char *key_buffer, char *value_buffer) {
+		throw std::invalid_argument("not implemented");
+	};
+	virtual int do_read(char *key_buffer, char **value) {
+		throw std::invalid_argument("not implemented");
+	};
+	virtual int do_scan(char *key_buffer, long scan_length) {
+		throw std::invalid_argument("not implemented");
+	};
+	virtual int do_read_modify_write(char *key_buffer, char *value_buffer) {
 		throw std::invalid_argument("not implemented");
 	};
 	virtual int reset() = 0;

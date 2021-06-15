@@ -1,32 +1,41 @@
 #include "worker.h"
 
 void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measurement) {
-	OperationType type;
-	char *key_buffer = new char[workload->key_size];
-	char *value_buffer= new char[workload->value_size];
+	Operation op;
+	op.key_buffer = new char[workload->key_size];
+	op.value_buffer = new char[workload->value_size];
 	std::chrono::steady_clock::time_point start_time, finish_time;
 
 	while (workload->has_next_op()) {
-		workload->next_op(&type, key_buffer, value_buffer);
+		workload->next_op(&op);
 		start_time = std::chrono::steady_clock::now();
-		switch (type) {
-		case SET:
-			client->do_set(key_buffer, value_buffer);
+		switch (op.type) {
+		case UPDATE:
+			client->do_update(op.key_buffer, op.value_buffer);
 			break;
-		case GET:
+		case INSERT:
+			client->do_insert(op.key_buffer, op.value_buffer);
+			break;
+		case READ:
 			char *value;
-			client->do_get(key_buffer, &value);
+			client->do_read(op.key_buffer, &value);
+			break;
+		case SCAN:
+			client->do_scan(op.key_buffer, op.scan_length);
+			break;
+		case READ_MODIFY_WRITE:
+			client->do_read_modify_write(op.key_buffer, op.value_buffer);
 			break;
 		default:
 			throw std::invalid_argument("invalid op type");
 		}
 		finish_time = std::chrono::steady_clock::now();
 		long latency = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
-		measurement->record_op(type, (double) latency, client->id);
+		measurement->record_op(op.type, (double) latency, client->id);
 		measurement->record_progress(1);
 	}
-	delete[] key_buffer;
-	delete[] value_buffer;
+	delete[] op.key_buffer;
+	delete[] op.value_buffer;
 }
 
 void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
@@ -34,19 +43,40 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
 	double progress;
 	long epoch = 0;
 	for (;!measurement->finished
-		;std::this_thread::sleep_for(std::chrono::seconds(1)), ++epoch) {
+	     ;std::this_thread::sleep_for(std::chrono::seconds(1)), ++epoch) {
 		measurement->get_rt_throughput(rt_throughput);
 		progress = measurement->get_progress_percent();
-		printf("%s (epoch %ld, progress %.2f%%): read throughput %.2lf ops/sec, write throughput %.2lf ops/sec, total throughput %.2lf ops/sec\n",
-		       task, epoch, 100 * progress, rt_throughput[GET], rt_throughput[SET], rt_throughput[GET] + rt_throughput[SET]);
+		printf("%s (epoch %ld, progress %.2f%%): ", task, epoch, 100 * progress);
+		double total_throughput = 0;
+		for (int i = 0; i < NR_OP_TYPE; ++i) {
+			printf("%s throughput %.2lf ops/sec, ", operation_type_name[i], rt_throughput[i]);
+			total_throughput += rt_throughput[i];
+		}
+		printf("total throughput %.2lf ops/sec\n", total_throughput);
 		std::cout << std::flush;
 	}
-	printf("%s overall: read throughput %.2lf ops/sec, write throughput %.2lf ops/sec, total throughput %.2lf ops/sec\n",
-	       task, measurement->get_throughput(GET), measurement->get_throughput(SET),
-	       measurement->get_throughput(GET) + measurement->get_throughput(SET));
-	printf("%s overall: read average latency %.2lf ns, read p99 latency %.2lf ns, write average latency %.2lf ns, write p99 latency %.2lf ns\n",
-	       task, measurement->get_latency_average(GET), measurement->get_latency_percentile(GET, 0.99),
-	       measurement->get_latency_average(SET), measurement->get_latency_percentile(SET, 0.99));
+	printf("%s: calculating overall performance metrics... (might take a while)\n", task);
+	measurement->final_result_lock.lock();
+
+	/* print throughput */
+	printf("%s overall: ", task);
+	double total_throughput = 0;
+	for (int i = 0; i < NR_OP_TYPE; ++i) {
+		printf("%s throughput %.2lf ops/sec, ", operation_type_name[i], measurement->get_throughput((OperationType) i));
+		total_throughput += measurement->get_throughput((OperationType) i);
+	}
+	printf("total throughput %.2lf ops/sec\n", total_throughput);
+
+	/* print latency */
+	printf("%s overall: ", task);
+	for (int i = 0; i < NR_OP_TYPE; ++i) {
+		printf("%s average latency %.2lf ns, ", operation_type_name[i], measurement->get_latency_average((OperationType) i));
+		printf("%s p99 latency %.2lf ns", operation_type_name[i], measurement->get_latency_percentile((OperationType) i, 0.99));
+		if (i != NR_OP_TYPE - 1)
+			printf(", ");
+	}
+	printf("\n");
+	measurement->final_result_lock.unlock();
 	std::cout << std::flush;
 }
 
@@ -99,10 +129,10 @@ void run_init_workload_with_op_measurement(const char *task, ClientFactory *fact
 }
 
 void run_uniform_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
-                                              int nr_thread, double read_ratio, long nr_op) {
+                                              long scan_length, int nr_thread, struct OpProportion op_prop, long nr_op) {
 	UniformWorkload **workload_arr = new UniformWorkload *[nr_thread];
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
-		workload_arr[thread_index] = new UniformWorkload(key_size, value_size, nr_entry, nr_op, read_ratio, thread_index);
+		workload_arr[thread_index] = new UniformWorkload(key_size, value_size, scan_length, nr_entry, nr_op, op_prop, thread_index);
 	}
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, nr_thread * nr_op);
@@ -114,10 +144,10 @@ void run_uniform_workload_with_op_measurement(const char *task, ClientFactory *f
 }
 
 void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
-                                              int nr_thread, double read_ratio, double zipfian_constant, long nr_op) {
+                                              long scan_length, int nr_thread, struct OpProportion op_prop, double zipfian_constant, long nr_op) {
 	ZipfianWorkload **workload_arr = new ZipfianWorkload *[nr_thread];
 	printf("ZipfianWorkload: start initializing zipfian variables, might take a while\n");
-	ZipfianWorkload base_workload(key_size, value_size, nr_entry, nr_op, read_ratio, zipfian_constant, 0);
+	ZipfianWorkload base_workload(key_size, value_size, scan_length, nr_entry, nr_op, op_prop, zipfian_constant, 0);
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		workload_arr[thread_index] = base_workload.clone(thread_index);
 	}

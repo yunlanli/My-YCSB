@@ -5,6 +5,7 @@
 #include "avl_tree.h"
 #include <chrono>
 #include <atomic>
+#include <mutex>
 #include <unordered_map>
 #include <list>
 #include <array>
@@ -24,6 +25,7 @@ struct OpMeasurement {
 	long max_progress;
 	std::atomic<long> cur_progress;
 	std::atomic<bool> finished;
+	std::mutex final_result_lock;
 
 	std::unordered_map<int, std::vector<double>[NR_OP_TYPE]> per_client_latency_vec;
 	std::vector<double> final_latency_vec[NR_OP_TYPE];

@@ -1,25 +1,27 @@
 #include <iostream>
 #include "worker.h"
 #include "wt_client.h"
-
-enum {
-	PARAM_KEY_SIZE = 1,
-	PARAM_VALUE_SIZE,
-	PARAM_NR_ENTRY,
-	PARAM_ARGC
-};
+#include "wt_config.h"
 
 int main(int argc, char *argv[]) {
-	if (argc != PARAM_ARGC) {
-		printf("Usage: %s <key size> <value size> <number of entries>\n", argv[0]);
-		return EINVAL;
+	if (argc != 2) {
+		printf("Usage: %s <config file>\n", argv[0]);
+		return -EINVAL;
 	}
-	long key_size = atol(argv[PARAM_KEY_SIZE]);
-	long value_size = atol(argv[PARAM_VALUE_SIZE]);
-	long nr_entry = atol(argv[PARAM_NR_ENTRY]);
+	YAML::Node file = YAML::LoadFile(argv[1]);
+	WiredTigerConfig config = WiredTigerConfig::parse_yaml(file);
 
-	WiredTigerFactory factory(nullptr, nullptr, nullptr, nullptr, nullptr, true, nullptr);
-
+	WiredTigerFactory factory(config.wiredtiger.data_dir.c_str(),
+	                          config.wiredtiger.table_name.c_str(),
+	                          config.wiredtiger.conn_config.c_str(),
+	                          config.wiredtiger.session_config.c_str(),
+	                          config.wiredtiger.cursor_config.c_str(),
+	                          true,
+	                          config.wiredtiger.create_table_config.c_str());
 	factory.update_cursor_config(WiredTigerClient::cursor_bulk_config);
-	run_init_workload_with_op_measurement("Initialization", &factory, nr_entry, key_size, value_size, 1);
+	run_init_workload_with_op_measurement("Initialization", &factory,
+	                                      config.database.nr_entry,
+	                                      config.database.key_size,
+	                                      config.database.value_size,
+	                                      1);
 }

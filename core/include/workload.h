@@ -10,9 +10,27 @@
 #include <numeric>
 
 enum OperationType {
-	SET = 0,
-	GET,
+	UPDATE = 0,
+	INSERT,
+	READ,
+	SCAN,
+	READ_MODIFY_WRITE,
 	NR_OP_TYPE,
+};
+
+const char* operation_type_name[] = {
+	"UPDATE", "INSERT", "READ", "SCAN", "READ_MODIFY_WRITE"
+};
+
+struct Operation {
+	OperationType type;
+	char *key_buffer;
+	char *value_buffer;  /* for UPDATE, INSERT, and READ_MODIFY_WRITE */
+	long scan_length;  /* for SCAN */
+};
+
+struct OpProportion {
+	float op[NR_OP_TYPE];
 };
 
 struct Workload {
@@ -20,7 +38,7 @@ struct Workload {
 	long value_size;
 
 	Workload(long key_size, long value_size);
-	virtual void next_op(OperationType *type, char *key_buffer, char *value_buffer) = 0;
+	virtual void next_op(Operation *op) = 0;
 	virtual bool has_next_op() = 0;
 
 protected:
@@ -32,7 +50,8 @@ struct UniformWorkload : public Workload {
 	/* configuration */
 	long nr_entry;
 	long nr_op;
-	double read_ratio;
+	long scan_length;
+	struct OpProportion op_prop;
 
 	/* constants */
 	static constexpr int key_format_len = 64;
@@ -42,8 +61,8 @@ struct UniformWorkload : public Workload {
 	long cur_nr_op;
 	char key_format[key_format_len];
 
-	UniformWorkload(long key_size, long value_size, long nr_entry, long nr_op, double read_ratio, unsigned int seed);
-	void next_op(OperationType *type, char *key_buffer, char *value_buffer) override;
+	UniformWorkload(long key_size, long value_size, long scan_length, long nr_entry, long nr_op, struct OpProportion op_prop, unsigned int seed);
+	void next_op(Operation *op) override;
 	bool has_next_op() override;
 
 private:
@@ -55,7 +74,8 @@ struct ZipfianWorkload : public Workload {
 	/* configuration */
 	long nr_entry;
 	long nr_op;
-	double read_ratio;
+	long scan_length;
+	struct OpProportion op_prop;
 	double zipfian_constant;
 
 	/* constants */
@@ -72,15 +92,15 @@ struct ZipfianWorkload : public Workload {
 	double alpha;
 	double eta;
 
-	ZipfianWorkload(long key_size, long value_size, long nr_entry, long nr_op, double read_ratio, double zipfian_constant, unsigned int seed);
-	void next_op(OperationType *type, char *key_buffer, char *value_buffer) override;
+	ZipfianWorkload(long key_size, long value_size, long scan_length, long nr_entry, long nr_op, struct OpProportion op_prop, double zipfian_constant, unsigned int seed);
+	void next_op(Operation *op) override;
 	bool has_next_op() override;
 	ZipfianWorkload *clone(unsigned int new_seed);
 
 private:
 	static unsigned long fnv1_64_hash(unsigned long value);
 	unsigned long generate_zipfian_random_ulong(bool hash);
-	void generate_key_string(char *key_buffer, long key);
+	void generate_key_string(char *key_buffer, unsigned long key);
 	void generate_value_string(char *value_buffer);
 };
 
@@ -98,7 +118,7 @@ struct InitWorkload : public Workload {
 	char key_format[key_format_len];
 
 	InitWorkload(long nr_entry, long start_key, long key_size, long value_size, unsigned int seed);
-	void next_op(OperationType *type, char *key_buffer, char *value_buffer) override;
+	void next_op(Operation *op) override;
 	bool has_next_op() override;
 private:
 	void generate_key_string(char *key_buffer, long key);
@@ -118,7 +138,7 @@ struct LatestWorkload : public Workload {
 	/* states */
 	unsigned int seed;
 	long cur_nr_op;
-	long cur_ack_key;
+	unsigned long cur_ack_key;
 	char key_format[key_format_len];
 
 	double zetan;
@@ -128,14 +148,14 @@ struct LatestWorkload : public Workload {
 	double eta;
 
 	LatestWorkload(long key_size, long value_size, long nr_entry, long nr_op, double read_ratio, double zipfian_constant, unsigned int seed);
-	void next_op(OperationType *type, char *key_buffer, char *value_buffer) override;
+	void next_op(Operation *op) override;
 	bool has_next_op() override;
 	LatestWorkload *clone(unsigned int new_seed);
 
 private:
 	static unsigned long fnv1_64_hash(unsigned long value);
 	unsigned long generate_zipfian_random_ulong(bool hash);
-	void generate_key_string(char *key_buffer, long key);
+	void generate_key_string(char *key_buffer, unsigned long key);
 	void generate_value_string(char *value_buffer);
 };
 

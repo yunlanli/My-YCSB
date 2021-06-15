@@ -12,16 +12,18 @@ struct WiredTigerClient : public Client {
 	WT_CURSOR *cursor;
 	const char *session_config;
 	const char *cursor_config;
-	bool read_modify_write;
 
 	static const char *session_default_config;
 	static const char *cursor_default_config;
 	static const char *cursor_bulk_config;
 
-	WiredTigerClient(WiredTigerFactory *factory, int id, const char *session_config, const char *cursor_config, bool read_modify_write);
+	WiredTigerClient(WiredTigerFactory *factory, int id, const char *session_config, const char *cursor_config);
 	~WiredTigerClient();
-	int do_set(char *key_buffer, char *value_buffer) override;
-	int do_get(char *key_buffer, char **value) override;
+	int do_update(char *key_buffer, char *value_buffer) override;
+	int do_insert(char *key_buffer, char *value_buffer) override;
+	int do_read(char *key_buffer, char **value) override;
+	int do_scan(char *key_buffer, long scan_length) override;
+	int do_read_modify_write(char *key_buffer, char *value_buffer) override;
 	int reset() override;
 	void close() override;
 };
@@ -35,7 +37,6 @@ struct WiredTigerFactory : public ClientFactory {
 	const char *cursor_config;
 	const char *create_table_config;
 	std::atomic<int> client_id;
-	bool read_modify_write;
 
 	static const char *default_data_dir;
 	static const char *default_table_name;
@@ -44,7 +45,7 @@ struct WiredTigerFactory : public ClientFactory {
 
 	WiredTigerFactory(const char *data_dir, const char *table_name, const char *conn_config,
 			  const char *session_config, const char *cursor_config, bool new_table,
-			  const char *create_table_config, bool read_modify_write);
+			  const char *create_table_config);
 	~WiredTigerFactory();
 	void update_session_config(const char *new_session_config);
 	void update_cursor_config(const char *new_cursor_config);
