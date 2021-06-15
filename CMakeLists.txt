@@ -17,7 +17,7 @@ set(CoreSource core/client.cpp
 set(WiredTigerClientSource wiredtiger/wt_client.cpp)
 add_executable(init_wt ${CoreSource} ${WiredTigerClientSource} wiredtiger/init_wt.cpp)
 add_executable(run_wt ${CoreSource} ${WiredTigerClientSource} wiredtiger/run_wt.cpp)
-target_link_libraries(init_wt /usr/local/lib/libwiredtiger.so pthread)
+target_link_libraries(init_wt /usr/local/lib/libwiredtiger.so pthread ${YAML_CPP_LIBRARIES})
 target_link_libraries(run_wt /usr/local/lib/libwiredtiger.so pthread ${YAML_CPP_LIBRARIES})
 
 set(RedisClientSource redis/redis_client.cpp)
