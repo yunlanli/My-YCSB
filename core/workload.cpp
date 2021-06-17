@@ -242,7 +242,7 @@ void LatestWorkload::next_op(Operation *op) {
 			key = this->cur_ack_key++;
 		}
 	}
-	key = LatestWorkload::fnv1_64_hash(key);
+	key = LatestWorkload::fnv1_64_hash(key) % ((unsigned long) this->nr_entry);
 	this->generate_key_string(op->key_buffer, key);
 	if (!read)
 		this->generate_value_string(op->value_buffer);
