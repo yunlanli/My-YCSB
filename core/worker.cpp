@@ -56,6 +56,7 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
 		std::cout << std::flush;
 	}
 	printf("%s: calculating overall performance metrics... (might take a while)\n", task);
+	std::cout << std::flush;
 	measurement->final_result_lock.lock();
 
 	/* print throughput */
