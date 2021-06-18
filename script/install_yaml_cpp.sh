@@ -5,6 +5,6 @@ cd yaml-cpp-yaml-cpp-0.6.3
 mkdir build
 cd build
 cmake ..
-make
+make -j8
 sudo make install
 cd ..
