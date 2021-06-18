@@ -1,6 +1,6 @@
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <number of redis servers>"
-    return 1
+    exit 1
 fi
 
 WORK_DIR=$(pwd)
