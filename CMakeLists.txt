@@ -23,5 +23,5 @@ target_link_libraries(run_wt /usr/local/lib/libwiredtiger.so pthread ${YAML_CPP_
 set(RedisClientSource redis/redis_client.cpp)
 add_executable(init_redis ${CoreSource} ${RedisClientSource} redis/init_redis.cpp)
 add_executable(run_redis ${CoreSource} ${RedisClientSource} redis/run_redis.cpp)
-target_link_libraries(init_redis pthread hiredis)
-target_link_libraries(run_redis pthread hiredis)
+target_link_libraries(init_redis pthread hiredis ${YAML_CPP_LIBRARIES})
+target_link_libraries(run_redis pthread hiredis ${YAML_CPP_LIBRARIES})

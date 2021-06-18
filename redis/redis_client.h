@@ -13,8 +13,9 @@ struct RedisClient : public Client {
 
 	RedisClient(RedisFactory *factory, int id);
 	~RedisClient();
-	int do_set(char *key_buffer, char *value_buffer) override;
-	int do_get(char *key_buffer, char **value) override;
+	int do_update(char *key_buffer, char *value_buffer) override;
+	int do_insert(char *key_buffer, char *value_buffer) override;
+	int do_read(char *key_buffer, char **value) override;
 	int reset() override;
 	void close() override;
 private:

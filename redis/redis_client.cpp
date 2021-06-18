@@ -20,7 +20,7 @@ RedisClient::~RedisClient() {
 		redisFree(this->redis_context);
 }
 
-int RedisClient::do_set(char *key_buffer, char *value_buffer) {
+int RedisClient::do_update(char *key_buffer, char *value_buffer) {
 	redisReply *reply = (redisReply *)redisCommand(this->redis_context, "SET %s %s", key_buffer, value_buffer);
 	if (!reply) {
 		fprintf(stderr, "RedisClient: SET error: %s\n", this->redis_context->errstr);
@@ -30,7 +30,11 @@ int RedisClient::do_set(char *key_buffer, char *value_buffer) {
 	return 0;
 }
 
-int RedisClient::do_get(char *key_buffer, char **value) {
+int RedisClient::do_insert(char *key_buffer, char *value_buffer) {
+	return this->do_update(key_buffer, value_buffer);
+}
+
+int RedisClient::do_read(char *key_buffer, char **value) {
 	redisReply *reply = (redisReply *)redisCommand(this->redis_context, "GET %s", key_buffer);
 	if (!reply) {
 		fprintf(stderr, "RedisClient: GET error: %s\n", this->redis_context->errstr);

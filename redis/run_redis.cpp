@@ -1,39 +1,65 @@
 #include <iostream>
 #include "worker.h"
 #include "redis_client.h"
-
-enum {
-	PARAM_KEY_SIZE = 1,
-	PARAM_VALUE_SIZE,
-	PARAM_NR_ENTRY,
-	PARAM_NR_THREAD,
-	PARAM_READ_RATIO,
-	PARAM_WARM_UP_OP,
-	PARAM_NR_OP,
-	PARAM_REDIS_ADDR,
-	PARAM_REDIS_PORT,
-	PARAM_ARGC
-};
+#include "redis_config.h"
+#include "yaml-cpp/yaml.h"
 
 int main(int argc, char *argv[]) {
-	if (argc != PARAM_ARGC) {
-		printf("Usage: %s <key size> <value size> <number of entries> <number of threads> <read ratio> <number of warm-up ops> <number of ops> <redis addr> <redis port>\n", argv[0]);
-		return EINVAL;
+	if (argc != 2) {
+		printf("Usage: %s <config file>\n", argv[0]);
+		return -EINVAL;
 	}
-	long key_size = atol(argv[PARAM_KEY_SIZE]);
-	long value_size = atol(argv[PARAM_VALUE_SIZE]);
-	long nr_entry = atol(argv[PARAM_NR_ENTRY]);
-	int nr_thread = atol(argv[PARAM_NR_THREAD]);
-	double read_ratio = atof(argv[PARAM_READ_RATIO]);
-	long nr_warm_up_op = atol(argv[PARAM_WARM_UP_OP]);
-	long nr_op = atol(argv[PARAM_NR_OP]);
-	char *redis_addr = argv[PARAM_REDIS_ADDR];
-	int redis_port = atoi(argv[PARAM_REDIS_PORT]);
+	YAML::Node file = YAML::LoadFile(argv[1]);
+	RedisConfig config = RedisConfig::parse_yaml(file);
 
-	RedisFactory factory(redis_addr, redis_port);
+	RedisFactory factory(config.redis.addr.c_str(), config.redis.port);
 
-	run_uniform_workload_with_op_measurement("Warm-Up", &factory, nr_entry, key_size, value_size, nr_thread,
-											 read_ratio, nr_warm_up_op);
-	run_uniform_workload_with_op_measurement("Uniform-Workload", &factory, nr_entry, key_size, value_size, nr_thread,
-	                                         read_ratio, nr_op);
+	OpProportion op_prop;
+	op_prop.op[READ] = config.workload.operation_proportion.read;
+	op_prop.op[UPDATE] = config.workload.operation_proportion.update;
+	op_prop.op[INSERT] = config.workload.operation_proportion.insert;
+	op_prop.op[SCAN] = config.workload.operation_proportion.scan;
+	op_prop.op[READ_MODIFY_WRITE] = config.workload.operation_proportion.read_modify_write;
+	for (int i = 0; i < 2; ++i) {
+		long nr_op;
+		if (i == 0) {
+			if (config.workload.nr_warmup_op == 0)
+				continue;
+			nr_op = config.workload.nr_warmup_op;
+		} else {
+			nr_op = config.workload.nr_op;
+		}
+		if (config.workload.request_distribution == "uniform") {
+			run_uniform_workload_with_op_measurement(i == 0 ? "Uniform (Warm-Up)" : "Uniform",
+								 &factory,
+								 config.database.nr_entry,
+								 config.database.key_size,
+								 config.database.value_size,
+								 config.workload.scan_length,
+								 config.workload.nr_thread,
+								 op_prop,
+								 nr_op);
+		} else if (config.workload.request_distribution == "zipfian") {
+			run_zipfian_workload_with_op_measurement(i == 0 ? "Zipfian (Warm-Up)" : "Zipfian",
+								 &factory,
+								 config.database.nr_entry,
+								 config.database.key_size,
+								 config.database.value_size,
+								 config.workload.scan_length,
+								 config.workload.nr_thread,
+								 op_prop,
+								 config.workload.zipfian_constant,
+								 nr_op);
+		} else if (config.workload.request_distribution == "latest") {
+			run_latest_workload_with_op_measurement(i == 0 ? "Latest (Warm-Up)" : "Latest",
+								&factory,
+								config.database.nr_entry,
+								config.database.key_size,
+								config.database.value_size,
+								config.workload.nr_thread,
+								op_prop.op[READ],
+								config.workload.zipfian_constant,
+								nr_op);
+		}
+	}
 }
