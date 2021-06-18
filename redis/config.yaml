@@ -1,8 +1,8 @@
 # Database Parameters
 database:
   key_size: 16
-  value_size: 16
-  nr_entry: 1073741824
+  value_size: 4096
+  nr_entry: 262144
 
 # Workload Parameters
 workload:
