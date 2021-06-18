@@ -5,14 +5,17 @@
 #include "yaml-cpp/yaml.h"
 
 int main(int argc, char *argv[]) {
-	if (argc != 2) {
-		printf("Usage: %s <config file>\n", argv[0]);
+	if (argc != 2 && argc != 3) {
+		printf("Usage: %s <config file> <redis port (optional)>\n", argv[0]);
 		return -EINVAL;
 	}
 	YAML::Node file = YAML::LoadFile(argv[1]);
 	RedisConfig config = RedisConfig::parse_yaml(file);
+	int port = config.redis.port;
+	if (argc == 3)
+		port = atoi(argv[2]);
 
-	RedisFactory factory(config.redis.addr.c_str(), config.redis.port);
+	RedisFactory factory(config.redis.addr.c_str(), port);
 
 	run_init_workload_with_op_measurement("Initialization",
 	                                      &factory,
