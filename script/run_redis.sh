@@ -19,5 +19,5 @@ sudo bash -c "echo never > /sys/kernel/mm/transparent_hugepage/defrag"
 ./src/redis-server ./redis.conf
 for i in $(seq 1 $1)
 do
-    ./src/redis-server ./redis.conf --port $((6379 + $i)) &
+    "./src/redis-server ./redis.conf --port $((6379 + $i))" &
 done
