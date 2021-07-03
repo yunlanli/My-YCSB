@@ -7,7 +7,7 @@ database:
 # Workload Parameters
 workload:
   nr_warmup_op: 0
-  nr_op: 5000000
+  nr_op: 16000
   nr_init_thread: 1
   nr_thread: 1
   operation_proportion:
