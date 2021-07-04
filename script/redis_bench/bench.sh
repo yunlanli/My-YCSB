@@ -1,7 +1,7 @@
 REDIS_ROOT=~/yuhong/redis
 MY_YCSB_ROOT=~/yuhong/My-YCSB/build
 MM_MEAUSRE_ROOT=~/yuhong/mm-measure/build
-PERF_ROOT=~/yuhong/linux/tool/perf
+PERF_ROOT=~/yuhong/linux/tools/perf
 LOG_ROOT=~/yuhong/exp_log
 
 # setup redis config
