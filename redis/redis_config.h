@@ -17,6 +17,7 @@ struct RedisConfig {
 		long nr_op;
 		int nr_init_thread;
 		int nr_thread;
+		long next_op_interval_ns;
 		struct {
 			float read;
 			float update;
@@ -49,6 +50,7 @@ RedisConfig RedisConfig::parse_yaml(YAML::Node &root) {
 	config.workload.nr_op = workload["nr_op"].as<long>();
 	config.workload.nr_init_thread = workload["nr_init_thread"].as<int>();
 	config.workload.nr_thread = workload["nr_thread"].as<int>();
+	config.workload.next_op_interval_ns = workload["next_op_interval_ns"].as<long>();
 	YAML::Node operation_proportion = workload["operation_proportion"];
 	config.workload.operation_proportion.read = operation_proportion["read"].as<float>();
 	config.workload.operation_proportion.update = operation_proportion["update"].as<float>();

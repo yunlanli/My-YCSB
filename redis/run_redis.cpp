@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
 								 config.workload.scan_length,
 								 config.workload.nr_thread,
 								 op_prop,
-								 nr_op);
+								 nr_op,
+								 config.workload.next_op_interval_ns);
 		} else if (config.workload.request_distribution == "zipfian") {
 			run_zipfian_workload_with_op_measurement(i == 0 ? "Zipfian (Warm-Up)" : "Zipfian",
 								 &factory,
@@ -52,7 +53,8 @@ int main(int argc, char *argv[]) {
 								 config.workload.nr_thread,
 								 op_prop,
 								 config.workload.zipfian_constant,
-								 nr_op);
+								 nr_op,
+								 config.workload.next_op_interval_ns);
 		} else if (config.workload.request_distribution == "latest") {
 			run_latest_workload_with_op_measurement(i == 0 ? "Latest (Warm-Up)" : "Latest",
 								&factory,
@@ -62,7 +64,8 @@ int main(int argc, char *argv[]) {
 								config.workload.nr_thread,
 								op_prop.op[READ],
 								config.workload.zipfian_constant,
-								nr_op);
+								nr_op,
+								config.workload.next_op_interval_ns);
 		}
 	}
 }

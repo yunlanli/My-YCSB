@@ -10,6 +10,7 @@ workload:
   nr_op: 200000
   nr_init_thread: 1
   nr_thread: 1
+  next_op_interval_ns: 0
   operation_proportion:
     read: 1
     update: 0
