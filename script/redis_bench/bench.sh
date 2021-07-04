@@ -30,7 +30,9 @@ do
         # start redis
         (numactl --cpunodebind 0  --membind 0 $MM_MEAUSRE_ROOT/colorctl 768 $color 0 $REDIS_ROOT/src/redis-server $REDIS_ROOT/redis.conf) &
         printf "[*] Redis restarted\n"
-        
+
+        sleep 5
+
         # run init
         numactl --cpunodebind 1 --membind 1 $MY_YCSB_ROOT/init_redis $MY_YCSB_ROOT/../redis/config.yaml
         printf "[*] Redis initialized\n"
