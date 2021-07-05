@@ -49,5 +49,8 @@ do
                 
                 # run workload
                 (numactl --cpunodebind 1 --membind 1 $MY_YCSB_ROOT/run_redis $MY_YCSB_ROOT/../redis/config.yaml) | tee $LOG_ROOT/${value_size}_${color}_run.log
+                
+                # print perf
+                cat $LOG_ROOT/${value_size}_${color}_perf.log
         done
 done
