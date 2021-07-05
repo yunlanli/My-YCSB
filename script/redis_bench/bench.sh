@@ -13,34 +13,40 @@ sudo bash -c "echo never > /sys/kernel/mm/transparent_hugepage/defrag"
 mkdir -p $LOG_ROOT
 
 # run experiment
-for color in 768 16 8 7 6 5 4
+for value_size in 4096 16384 65536 262144
 do
-        printf "[*] Running experiment with color %d\n" $color
-        # kill redis
-        while [ -n "$(pgrep redis)" ]
+        # change config file
+        sed -i "s/value_size=.*/value_size="$value_size"/" $MY_YCSB_ROOT/../redis/config.yaml
+        sed -i "s/nr_entry=.*/nr_entry="$((1073741824 / $value_size))"/" $MY_YCSB_ROOT/../redis/config.yaml
+        for color in 768 16 8 7 6 5 4
         do
-            kill $(pgrep redis)
+                printf "[*] Running experiment with value size %d color %d\n" $value_size $color
+                # kill redis
+                while [ -n "$(pgrep redis)" ]
+                do
+                    kill $(pgrep redis)
+                done
+                printf "[*] Redis killed\n"
+
+                # fill color
+                $MM_MEAUSRE_ROOT/init_colormem 163840
+                printf "[*] Color refilled\n"
+
+                # start redis
+                (numactl --cpunodebind 0  --membind 0 $MM_MEAUSRE_ROOT/colorctl 768 $color 0 $REDIS_ROOT/src/redis-server $REDIS_ROOT/redis.conf) &
+                printf "[*] Redis restarted\n"
+
+                sleep 5
+
+                # run init
+                numactl --cpunodebind 1 --membind 1 $MY_YCSB_ROOT/init_redis $MY_YCSB_ROOT/../redis/config.yaml
+                printf "[*] Redis initialized\n"
+
+                # start perf
+                (sleep 5 && $PERF_ROOT/perf stat -o $LOG_ROOT/${value_size}_${color}_perf.log -e unc_m_tagchk.hit,unc_m_tagchk.miss_clean,unc_m_tagchk.miss_dirty,cycles,instructions -a --per-node sleep 5) &
+                printf "[*] Perf started\n"
+                
+                # run workload
+                (numactl --cpunodebind 1 --membind 1 $MY_YCSB_ROOT/run_redis $MY_YCSB_ROOT/../redis/config.yaml) | tee $LOG_ROOT/${value_size}_${color}_run.log
         done
-        printf "[*] Redis killed\n"
-
-        # fill color
-        $MM_MEAUSRE_ROOT/init_colormem 163840
-        printf "[*] Color refilled\n"
-
-        # start redis
-        (numactl --cpunodebind 0  --membind 0 $MM_MEAUSRE_ROOT/colorctl 768 $color 0 $REDIS_ROOT/src/redis-server $REDIS_ROOT/redis.conf) &
-        printf "[*] Redis restarted\n"
-
-        sleep 5
-
-        # run init
-        numactl --cpunodebind 1 --membind 1 $MY_YCSB_ROOT/init_redis $MY_YCSB_ROOT/../redis/config.yaml
-        printf "[*] Redis initialized\n"
-
-        # start perf
-        (sleep 5 && $PERF_ROOT/perf stat -o $LOG_ROOT/${color}_perf.log -e unc_m_tagchk.hit,unc_m_tagchk.miss_clean,unc_m_tagchk.miss_dirty --per-node sleep 5) &
-        printf "[*] Perf started\n"
-        
-        # run workload
-        (numactl --cpunodebind 1 --membind 1 $MY_YCSB_ROOT/run_redis $MY_YCSB_ROOT/../redis/config.yaml) | tee $LOG_ROOT/${color}_run.log
 done
