@@ -18,7 +18,7 @@ do
         # change config file
         sed -i "s/value_size: .*/value_size: "$value_size"/" $MY_YCSB_ROOT/../redis/config.yaml
         sed -i "s/nr_entry: .*/nr_entry: "$((1073741824 / $value_size))"/" $MY_YCSB_ROOT/../redis/config.yaml
-        sed -i "s/nr_op: .*/nr_op: 10000000/" $MY_YCSB_ROOT/../redis/config.yaml
+        sed -i "s/nr_op: .*/nr_op: "$((10000000 * 4096 / $value_size))"/" $MY_YCSB_ROOT/../redis/config.yaml
         for color in 768 16 8 7 6 5 4
         do
                 printf "[*] Running experiment with value size %d color %d\n" $value_size $color
@@ -44,7 +44,7 @@ do
                 printf "[*] Redis initialized\n"
 
                 # start perf
-                (sleep 5 && $PERF_ROOT/perf stat -o $LOG_ROOT/${value_size}_${color}_perf.log -e unc_m_tagchk.hit,unc_m_tagchk.miss_clean,unc_m_tagchk.miss_dirty,cycles,instructions -a --per-node sleep 5) &
+                (sleep 60 && $PERF_ROOT/perf stat -o $LOG_ROOT/${value_size}_${color}_perf.log -e unc_m_tagchk.hit,unc_m_tagchk.miss_clean,unc_m_tagchk.miss_dirty,cycles,instructions -a --per-node sleep 5) &
                 printf "[*] Perf started\n"
                 
                 # run workload
