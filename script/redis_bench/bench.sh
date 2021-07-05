@@ -38,7 +38,7 @@ do
         printf "[*] Redis initialized\n"
 
         # start perf
-        (sleep 5 && ($PERF_ROOT/perf stat -e unc_m_tagchk.hit,unc_m_tagchk.miss_clean,unc_m_tagchk.miss_dirty --per-node sleep 5) | tee $LOG_ROOT/${color}_perf.log) &
+        (sleep 5 && $PERF_ROOT/perf stat -o $LOG_ROOT/${color}_perf.log -e unc_m_tagchk.hit,unc_m_tagchk.miss_clean,unc_m_tagchk.miss_dirty --per-node sleep 5) &
         printf "[*] Perf started\n"
         
         # run workload
