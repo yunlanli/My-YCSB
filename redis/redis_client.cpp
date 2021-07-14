@@ -46,7 +46,7 @@ int RedisClient::do_read(char *key_buffer, char **value) {
 }
 
 int RedisClient::reset() {
-	throw std::invalid_argument("reset not implemented");
+	return 0;
 }
 
 void RedisClient::close() {
