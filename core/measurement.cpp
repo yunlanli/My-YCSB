@@ -6,6 +6,7 @@ OpMeasurement::OpMeasurement() {
 		this->rt_op_count_arr[i] = 0;
 	}
 	this->cur_progress = 0;
+	this->should_finish = false;
 	this->finished = false;
 	this->final_result_lock.lock();
 }

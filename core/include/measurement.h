@@ -24,6 +24,7 @@ struct OpMeasurement {
 
 	long max_progress;
 	std::atomic<long> cur_progress;
+	std::atomic<bool> should_finish;
 	std::atomic<bool> finished;
 	std::mutex final_result_lock;
 
