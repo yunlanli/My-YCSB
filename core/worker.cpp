@@ -7,7 +7,7 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 	std::chrono::steady_clock::time_point start_time, finish_time;
 	std::chrono::steady_clock::time_point next_op_time = std::chrono::steady_clock::now();
 
-	while (workload->has_next_op() && !measurement->should_finish) {
+	while (workload->has_next_op()) {
 		workload->next_op(&op);
 		while (std::chrono::steady_clock::now() < next_op_time) {
 			/* busy waiting */
@@ -39,7 +39,6 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 		measurement->record_progress(1);
 		next_op_time += std::chrono::nanoseconds(next_op_interval_ns);
 	}
-	measurement->should_finish = true;
 	delete[] op.key_buffer;
 	delete[] op.value_buffer;
 }
