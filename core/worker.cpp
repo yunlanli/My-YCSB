@@ -39,6 +39,7 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 		measurement->record_progress(1);
 		next_op_time += std::chrono::nanoseconds(next_op_interval_ns);
 	}
+	client->reset();
 	delete[] op.key_buffer;
 	delete[] op.value_buffer;
 }
