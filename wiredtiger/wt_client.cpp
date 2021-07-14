@@ -113,7 +113,7 @@ int WiredTigerClient::do_scan(char *key_buffer, long scan_length) {
 
 int WiredTigerClient::reset() {
 	int ret = this->cursor->reset(cursor);
-	if (!ret) {
+	if (ret) {
 		fprintf(stderr, "WiredTigerClient: reset failed, ret: %s\n", wiredtiger_strerror(ret));
 		throw std::invalid_argument("reset failed");
 	}
