@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
 	                          config.wiredtiger.session_config.c_str(),
 	                          config.wiredtiger.cursor_config.c_str(),
 	                          false,
-	                          config.wiredtiger.create_table_config.c_str());
+	                          config.wiredtiger.create_table_config.c_str(),
+	                          config.wiredtiger.print_stats);
 	OpProportion op_prop;
 	op_prop.op[READ] = config.workload.operation_proportion.read;
 	op_prop.op[UPDATE] = config.workload.operation_proportion.update;

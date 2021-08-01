@@ -35,6 +35,7 @@ struct WiredTigerConfig {
 		string session_config;
 		string cursor_config;
 		string create_table_config;
+		bool print_stats;
 	} wiredtiger;
 
 	static WiredTigerConfig parse_yaml(YAML::Node &root);
@@ -70,6 +71,7 @@ WiredTigerConfig WiredTigerConfig::parse_yaml(YAML::Node &root) {
 	config.wiredtiger.session_config = wiredtiger["session_config"].as<string>();
 	config.wiredtiger.cursor_config = wiredtiger["cursor_config"].as<string>();
 	config.wiredtiger.create_table_config = wiredtiger["create_table_config"].as<string>();
+	config.wiredtiger.print_stats = wiredtiger["print_stats"].as<bool>();
 
 	return config;
 }

@@ -139,7 +139,7 @@ const char *WiredTigerFactory::create_table_default_config = "key_format=S,value
 
 WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_name, const char *conn_config,
 				     const char *session_config, const char *cursor_config, bool new_table,
-				     const char *create_table_config)
+				     const char *create_table_config, bool print_stats)
 	: client_id(0) {
 	if (data_dir == nullptr)
 		data_dir = WiredTigerFactory::default_data_dir;
@@ -155,6 +155,7 @@ WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_nam
 	this->session_config = session_config;
 	this->cursor_config = cursor_config;
 	this->create_table_config = create_table_config;
+	this->print_stats = print_stats;
 
 	int ret;
 	ret = wiredtiger_open(this->data_dir, nullptr, this->conn_config, &this->conn);
@@ -180,7 +181,46 @@ WiredTigerFactory::WiredTigerFactory(const char *data_dir, const char *table_nam
 	}
 }
 
+int WiredTigerFactory::print_cursor(WT_CURSOR *cursor)
+{
+	const char *desc, *pvalue;
+	uint64_t value;
+	int ret;
+	while ((ret = cursor->next(cursor)) == 0 &&
+	       (ret = cursor->get_value(cursor, &desc, &pvalue, &value)) == 0)
+		if (value != 0)
+			printf("%s=%s\n", desc, pvalue);
+	return (ret == WT_NOTFOUND ? 0 : ret);
+}
+
 WiredTigerFactory::~WiredTigerFactory() {
+	WT_SESSION *session;
+	WT_CURSOR *cursor;
+	int ret;
+
+	if (this->print_stats) {
+		ret = this->conn->open_session(this->conn, nullptr, this->session_config, &session);
+		if (ret != 0) {
+			fprintf(stderr, "WiredTigerFactory: failed to open stat session, ret: %s\n", wiredtiger_strerror(ret));
+			throw std::invalid_argument("failed to open stat session");
+		}
+		ret = session->open_cursor(session, "statistics:", NULL, "statistics=(fast)", &cursor);
+		if (ret != 0) {
+			fprintf(stderr, "WiredTigerFactory: failed to open stat cursor, ret: %s\n", wiredtiger_strerror(ret));
+			throw std::invalid_argument("failed to open stat cursor");
+		}
+		print_cursor(cursor);
+		ret = cursor->close(cursor);
+		if (ret != 0) {
+			fprintf(stderr, "WiredTigerFactory: failed to close stat cursor, ret: %s\n", wiredtiger_strerror(ret));
+			throw std::invalid_argument("failed to close stat cursor");
+		}
+		ret = session->close(session, NULL);
+		if (ret != 0) {
+			fprintf(stderr, "WiredTigerFactory: failed to close stat session, ret: %s\n", wiredtiger_strerror(ret));
+			throw std::invalid_argument("failed to close stat session");
+		}
+	}
 	this->conn->close(this->conn, NULL);
 }
 

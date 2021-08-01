@@ -37,6 +37,7 @@ struct WiredTigerFactory : public ClientFactory {
 	const char *cursor_config;
 	const char *create_table_config;
 	std::atomic<int> client_id;
+	bool print_stats;
 
 	static const char *default_data_dir;
 	static const char *default_table_name;
@@ -45,12 +46,13 @@ struct WiredTigerFactory : public ClientFactory {
 
 	WiredTigerFactory(const char *data_dir, const char *table_name, const char *conn_config,
 			  const char *session_config, const char *cursor_config, bool new_table,
-			  const char *create_table_config);
+			  const char *create_table_config, bool print_stats);
 	~WiredTigerFactory();
 	void update_session_config(const char *new_session_config);
 	void update_cursor_config(const char *new_cursor_config);
 	WiredTigerClient *create_client() override;
 	void destroy_client(Client *client) override;
+	static int print_cursor(WT_CURSOR *cursor);
 };
 
 #endif //YCSB_WT_CLIENT_H
