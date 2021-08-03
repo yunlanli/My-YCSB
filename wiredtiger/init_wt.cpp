@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
 	                          config.wiredtiger.session_config.c_str(),
 	                          config.wiredtiger.cursor_config.c_str(),
 	                          true,
-	                          config.wiredtiger.create_table_config.c_str());
+	                          config.wiredtiger.create_table_config.c_str(),
+	                          false);
 	factory.update_cursor_config(WiredTigerClient::cursor_bulk_config);
 	run_init_workload_with_op_measurement("Initialization", &factory,
 	                                      config.database.nr_entry,
