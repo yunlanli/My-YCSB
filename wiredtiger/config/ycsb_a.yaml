@@ -9,7 +9,7 @@ workload:
   nr_warmup_op: 0
   nr_op: 10000000
   nr_thread: 1
-  next_op_interval_ns: 0
+  next_op_interval_ns: 0  # use 50000 on mars
   operation_proportion:
     read: 0.5
     update: 0.5
@@ -19,6 +19,11 @@ workload:
   request_distribution: "zipfian"
   # for zipfian distribution
   zipfian_constant: 0.99
+  # for trace workload
+  trace_file_list:
+    - "/home/yuhongyi/tmpfs/trace_0"
+    - "/home/yuhongyi/tmpfs/trace_1"
+    - "/home/yuhongyi/tmpfs/trace_2"
   # for scan operation
   scan_length: 100
 

@@ -8,6 +8,9 @@
 #include <cmath>
 #include <stdexcept>
 #include <numeric>
+#include <fstream>
+#include <string>
+#include <sstream>
 
 enum OperationType {
 	UPDATE = 0,
@@ -154,6 +157,24 @@ private:
 	static unsigned long fnv1_64_hash(unsigned long value);
 	unsigned long generate_zipfian_random_ulong(bool hash);
 	void generate_key_string(char *key_buffer, unsigned long key);
+	void generate_value_string(char *value_buffer);
+};
+
+struct TraceWorkload : public Workload {
+	/* configuration */
+	long nr_op;
+	std::string trace_path;
+
+	/* states */
+	unsigned int seed;
+	long cur_nr_op;
+	std::ifstream trace_file;
+
+	TraceWorkload(long key_size, long value_size, long nr_op, string trace_path, unsigned int seed);
+	void next_op(Operation *op) override;
+	bool has_next_op() override;
+
+private:
 	void generate_value_string(char *value_buffer);
 };
 

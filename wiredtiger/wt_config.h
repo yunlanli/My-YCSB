@@ -2,9 +2,11 @@
 #define YCSB_WT_CONFIG_H
 
 #include <string>
+#include <list>
 #include "yaml-cpp/yaml.h"
 
 using std::string;
+using std::list;
 
 struct WiredTigerConfig {
 	struct {
@@ -26,6 +28,7 @@ struct WiredTigerConfig {
 		} operation_proportion;
 		string request_distribution;
 		double zipfian_constant;
+		list<string> trace_file_list;
 		long scan_length;
 	} workload;
 	struct {
@@ -62,6 +65,9 @@ WiredTigerConfig WiredTigerConfig::parse_yaml(YAML::Node &root) {
 	config.workload.operation_proportion.read_modify_write = operation_proportion["read_modify_write"].as<float>();
 	config.workload.request_distribution = workload["request_distribution"].as<string>();
 	config.workload.zipfian_constant = workload["zipfian_constant"].as<double>();
+	YAML::Node trace_file_list = workload["trace_file_list"];
+	for (YAML::iterator iter = trace_file_list.begin(); iter != trace_file_list.end(); ++iter)
+		config.workload.trace_file_list.push_back((*iter).as<string>());
 	config.workload.scan_length = workload["scan_length"].as<long>();
 
 	YAML::Node wiredtiger = root["wiredtiger"];

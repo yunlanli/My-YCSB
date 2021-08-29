@@ -168,12 +168,30 @@ void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *f
 }
 
 void run_latest_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
-					     int nr_thread, double read_ratio, double zipfian_constant, long nr_op, long next_op_interval_ns) {
+                                             int nr_thread, double read_ratio, double zipfian_constant, long nr_op, long next_op_interval_ns) {
 	LatestWorkload **workload_arr = new LatestWorkload *[nr_thread];
 	printf("LatestWorkload: start initializing zipfian variables, might take a while\n");
 	LatestWorkload base_workload(key_size, value_size, nr_entry, nr_op, read_ratio, zipfian_constant, 0);
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		workload_arr[thread_index] = base_workload.clone(thread_index);
+	}
+
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, nr_thread * nr_op, next_op_interval_ns);
+
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		delete workload_arr[thread_index];
+	}
+	delete[] workload_arr;
+}
+
+void run_trace_workload_with_op_measurement(const char *task, ClientFactory *factory, long key_size, long value_size,
+                                            int nr_thread, std::list<std::string> trace_file_list, long nr_op, long next_op_interval_ns) {
+	if (trace_file_list.size() < nr_thread)
+		throw std::invalid_argument("insufficient trace files");
+	TraceWorkload **workload_arr = new TraceWorkload *[nr_thread];
+	std::list<std::string>::iterator trace_file_iter = trace_file_list.begin();
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index, ++trace_file_iter) {
+		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, *trace_file_iter, thread_index);
 	}
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, nr_thread * nr_op, next_op_interval_ns);
