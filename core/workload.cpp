@@ -328,9 +328,9 @@ void TraceWorkload::next_op(Operation *op) {
 	 */
 	std::stringstream line_stream(line);
 	std::string op_type, key;
-	if (!getline(line_stream, op_type, ','))
+	if (!std::getline(line_stream, op_type, ','))
 		throw std::invalid_argument("failed to get the op type");
-	if (!getline(line_stream, key, ','))
+	if (!std::getline(line_stream, key, ','))
 		throw std::invalid_argument("failed to get the key");
 
 	if (op_type == "UPDATE") {
@@ -343,7 +343,7 @@ void TraceWorkload::next_op(Operation *op) {
 		op->type = READ;
 	} else if (op_type == "SCAN") {
 		std::string scan_length;
-		if (!getline(line_stream, scan_length, ','))
+		if (!std::getline(line_stream, scan_length, ','))
 			throw std::invalid_argument("failed to get the scan length");
 		op->type = SCAN;
 		op->scan_length = std::stol(scan_length, nullptr, 10);
