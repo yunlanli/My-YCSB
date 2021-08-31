@@ -190,6 +190,7 @@ void run_trace_workload_with_op_measurement(const char *task, ClientFactory *fac
 		throw std::invalid_argument("insufficient trace files");
 	TraceWorkload **workload_arr = new TraceWorkload *[nr_thread];
 	std::list<std::string>::iterator trace_file_iter = trace_file_list.begin();
+	printf("TraceWorkload: start loading trace files, might take a while\n");
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index, ++trace_file_iter) {
 		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, *trace_file_iter, thread_index);
 	}

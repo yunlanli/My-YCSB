@@ -302,6 +302,13 @@ TraceWorkload::TraceWorkload(long key_size, long value_size, long nr_op, std::st
 	this->trace_file.open(this->trace_path);
 	if (!this->trace_file.is_open())
 		throw std::invalid_argument("unable to open trace file");
+	for (long i = 0; i < nr_op; ++i) {
+		std::string line;
+		if (!std::getline(this->trace_file, line))
+			throw std::invalid_argument("failed to get the next line from the trace file");
+		this->line_list.push_back(line);
+	}
+	this->trace_file.close();
 }
 
 bool TraceWorkload::has_next_op() {
@@ -312,9 +319,8 @@ void TraceWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 
-	std::string line;
-	if (!getline(this->trace_file, line))
-		throw std::invalid_argument("failed to get the next line from the trace file");
+	std::string line = this->line_list.front();
+	this->line_list.pop_front();
 
 	/* trace file format: 
 	 * [UPDATE/READ/READ_MODIFY_WRITE],[key string]

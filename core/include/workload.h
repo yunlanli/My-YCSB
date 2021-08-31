@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <list>
 
 enum OperationType {
 	UPDATE = 0,
@@ -169,8 +170,9 @@ struct TraceWorkload : public Workload {
 	unsigned int seed;
 	long cur_nr_op;
 	std::ifstream trace_file;
+	std::list<std::string> line_list;
 
-	TraceWorkload(long key_size, long value_size, long nr_op, string trace_path, unsigned int seed);
+	TraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed);
 	void next_op(Operation *op) override;
 	bool has_next_op() override;
 
