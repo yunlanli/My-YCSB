@@ -32,6 +32,7 @@ struct RedisConfig {
 	struct {
 		string addr;
 		int port;
+		int batch_size;
 	} redis;
 
 	static RedisConfig parse_yaml(YAML::Node &root);
@@ -64,6 +65,7 @@ RedisConfig RedisConfig::parse_yaml(YAML::Node &root) {
 	YAML::Node redis = root["redis"];
 	config.redis.addr = redis["addr"].as<string>();
 	config.redis.port = redis["port"].as<int>();
+	config.redis.batch_size = redis["batch_size"].as<int>();
 
 	return config;
 }

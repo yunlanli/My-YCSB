@@ -27,3 +27,4 @@ workload:
 redis:
   addr: "127.0.0.1"
   port: 6379
+  batch_size: 1
