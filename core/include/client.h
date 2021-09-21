@@ -3,7 +3,7 @@
 
 #include <atomic>
 #include <stdexcept>
-#include "worker.h"
+#include "workload.h"
 
 struct ClientFactory;
 
