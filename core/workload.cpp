@@ -52,6 +52,7 @@ void UniformWorkload::next_op(Operation *op) {
 	long key = this->generate_random_long(&this->seed) % this->nr_entry;
 	this->generate_key_string(op->key_buffer, key);
 	++this->cur_nr_op;
+	op->is_last_op = !this->has_next_op();
 }
 
 void UniformWorkload::generate_key_string(char *key_buffer, long key) {
@@ -116,6 +117,7 @@ void ZipfianWorkload::next_op(Operation *op) {
 	unsigned long key = this->generate_zipfian_random_ulong(true) % ((unsigned long) this->nr_entry);
 	this->generate_key_string(op->key_buffer, key);
 	++this->cur_nr_op;
+	op->is_last_op = !this->has_next_op();
 }
 
 ZipfianWorkload * ZipfianWorkload::clone(unsigned int new_seed) {
@@ -181,6 +183,7 @@ void InitWorkload::next_op(Operation *op) {
 	op->type = INSERT;
 	this->generate_key_string(op->key_buffer, this->start_key + this->cur_nr_entry++);
 	this->generate_value_string(op->value_buffer);
+	op->is_last_op = !this->has_next_op();
 }
 
 void InitWorkload::generate_key_string(char *key_buffer, long key) {
@@ -247,6 +250,7 @@ void LatestWorkload::next_op(Operation *op) {
 	if (!read)
 		this->generate_value_string(op->value_buffer);
 	++this->cur_nr_op;
+	op->is_last_op = !this->has_next_op();
 }
 
 LatestWorkload * LatestWorkload::clone(unsigned int new_seed) {
@@ -355,6 +359,7 @@ void TraceWorkload::next_op(Operation *op) {
 	}
 	strcpy(op->key_buffer, key.c_str());
 	++this->cur_nr_op;
+	op->is_last_op = !this->has_next_op();
 }
 
 void TraceWorkload::generate_value_string(char *value_buffer) {
