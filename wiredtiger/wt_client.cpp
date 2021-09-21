@@ -36,6 +36,23 @@ WiredTigerClient::~WiredTigerClient() {
 	}
 }
 
+int WiredTigerClient::do_operation(Operation *op) {
+	switch (op->type) {
+	case UPDATE:
+		return this->do_update(op->key_buffer, op->value_buffer);
+	case INSERT:
+		return this->do_insert(op->key_buffer, op->value_buffer);
+	case READ:
+		return this->do_read(op->key_buffer, &op->reply_value_buffer);
+	case SCAN:
+		return this->do_scan(op->key_buffer, op->scan_length);
+	case READ_MODIFY_WRITE:
+		return this->do_read_modify_write(op->key_buffer, op->value_buffer);
+	default:
+		throw std::invalid_argument("invalid op type");
+	}
+}
+
 int WiredTigerClient::do_read(char *key_buffer, char **value) {
 	int ret;
 	this->cursor->reset(cursor);

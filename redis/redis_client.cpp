@@ -20,6 +20,19 @@ RedisClient::~RedisClient() {
 		redisFree(this->redis_context);
 }
 
+int RedisClient::do_operation(Operation *op) {
+	switch (op->type) {
+	case READ:
+		return this->do_read(op->key_buffer, &op->reply_value_buffer);
+	case INSERT:
+		return this->do_insert(op->key_buffer, op->value_buffer);
+	case UPDATE:
+		return this->do_update(op->key_buffer, op->value_buffer);
+	default:
+		throw std::invalid_argument("invalid op type");
+	}
+}
+
 int RedisClient::do_update(char *key_buffer, char *value_buffer) {
 	redisReply *reply = (redisReply *)redisCommand(this->redis_context, "SET %s %s", key_buffer, value_buffer);
 	if (!reply) {

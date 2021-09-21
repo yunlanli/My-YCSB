@@ -19,13 +19,16 @@ struct WiredTigerClient : public Client {
 
 	WiredTigerClient(WiredTigerFactory *factory, int id, const char *session_config, const char *cursor_config);
 	~WiredTigerClient();
-	int do_update(char *key_buffer, char *value_buffer) override;
-	int do_insert(char *key_buffer, char *value_buffer) override;
-	int do_read(char *key_buffer, char **value) override;
-	int do_scan(char *key_buffer, long scan_length) override;
-	int do_read_modify_write(char *key_buffer, char *value_buffer) override;
+	int do_operation(Operation *op) override;
 	int reset() override;
 	void close() override;
+
+private:
+	int do_update(char *key_buffer, char *value_buffer);
+	int do_insert(char *key_buffer, char *value_buffer);
+	int do_read(char *key_buffer, char **value);
+	int do_scan(char *key_buffer, long scan_length);
+	int do_read_modify_write(char *key_buffer, char *value_buffer);
 };
 
 struct WiredTigerFactory : public ClientFactory {

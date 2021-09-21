@@ -13,26 +13,7 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 			/* busy waiting */
 		}
 		start_time = std::chrono::steady_clock::now();
-		switch (op.type) {
-		case UPDATE:
-			client->do_update(op.key_buffer, op.value_buffer);
-			break;
-		case INSERT:
-			client->do_insert(op.key_buffer, op.value_buffer);
-			break;
-		case READ:
-			char *value;
-			client->do_read(op.key_buffer, &value);
-			break;
-		case SCAN:
-			client->do_scan(op.key_buffer, op.scan_length);
-			break;
-		case READ_MODIFY_WRITE:
-			client->do_read_modify_write(op.key_buffer, op.value_buffer);
-			break;
-		default:
-			throw std::invalid_argument("invalid op type");
-		}
+		client->do_operation(&op);
 		finish_time = std::chrono::steady_clock::now();
 		long latency = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
 		measurement->record_op(op.type, (double) latency, client->id);

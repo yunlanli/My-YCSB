@@ -13,12 +13,14 @@ struct RedisClient : public Client {
 
 	RedisClient(RedisFactory *factory, int id);
 	~RedisClient();
-	int do_update(char *key_buffer, char *value_buffer) override;
-	int do_insert(char *key_buffer, char *value_buffer) override;
-	int do_read(char *key_buffer, char **value) override;
+	int do_operation(Operation *op) override;
 	int reset() override;
 	void close() override;
+
 private:
+	int do_update(char *key_buffer, char *value_buffer);
+	int do_insert(char *key_buffer, char *value_buffer);
+	int do_read(char *key_buffer, char **value);
 	void set_last_reply(redisReply *reply);
 };
 
