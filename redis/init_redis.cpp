@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 	if (argc == 3)
 		port = atoi(argv[2]);
 
-	RedisFactory factory(config.redis.addr.c_str(), port);
+	RedisFactory factory(config.redis.addr.c_str(), port, config.redis.batch_size);
 
 	run_init_workload_with_op_measurement("Initialization",
 	                                      &factory,
