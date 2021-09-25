@@ -25,3 +25,10 @@ add_executable(init_redis ${CoreSource} ${RedisClientSource} redis/init_redis.cp
 add_executable(run_redis ${CoreSource} ${RedisClientSource} redis/run_redis.cpp)
 target_link_libraries(init_redis pthread hiredis ${YAML_CPP_LIBRARIES})
 target_link_libraries(run_redis pthread hiredis ${YAML_CPP_LIBRARIES})
+
+set(MemcachedClientSource memcached/memcached_client.cpp)
+add_executable(init_memcached ${CoreSource} ${MemcachedClientSource} memcached/init_memcached.cpp)
+add_executable(run_memcached ${CoreSource} ${MemcachedClientSource} memcached/run_memcached.cpp)
+target_link_libraries(init_memcached pthread memcached ${YAML_CPP_LIBRARIES})
+target_link_libraries(run_memcached pthread memcached ${YAML_CPP_LIBRARIES})
+

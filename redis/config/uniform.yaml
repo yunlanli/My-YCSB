@@ -23,7 +23,7 @@ workload:
   # for scan operation
   scan_length: 100
 
-# WiredTiger Parameters
+# Redis Parameters
 redis:
   addr: "127.0.0.1"
   port: 6379
