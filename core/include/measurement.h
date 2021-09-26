@@ -12,6 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <numeric>
+#include <fstream>
 
 
 struct OpMeasurement {
@@ -28,6 +29,7 @@ struct OpMeasurement {
 	std::mutex final_result_lock;
 
 	std::unordered_map<int, std::vector<double>[NR_OP_TYPE]> per_client_latency_vec;
+	std::unordered_map<int, std::vector<long>[NR_OP_TYPE]> per_client_timestamp_vec;
 	std::vector<double> final_latency_vec[NR_OP_TYPE];
 
 	OpMeasurement();
@@ -44,6 +46,7 @@ struct OpMeasurement {
 	double get_progress_percent();
 	double get_latency_average(OperationType type);
 	double get_latency_percentile(OperationType type, float percentile);
+	void save_latency(const char *path);
 };
 
 #endif //YCSB_MEASUREMENT_H

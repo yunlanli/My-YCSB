@@ -23,6 +23,10 @@ workload:
   # for scan operation
   scan_length: 100
 
+# Measurement Parameters
+measurement:
+  latency_file: ""
+
 # Memcached Parameters
 memcached:
   addr: "127.0.0.1"

@@ -34,38 +34,41 @@ int main(int argc, char *argv[]) {
 		}
 		if (config.workload.request_distribution == "uniform") {
 			run_uniform_workload_with_op_measurement(i == 0 ? "Uniform (Warm-Up)" : "Uniform",
-								 &factory,
-								 config.database.nr_entry,
-								 config.database.key_size,
-								 config.database.value_size,
-								 config.workload.scan_length,
-								 config.workload.nr_thread,
-								 op_prop,
-								 nr_op,
-								 config.workload.next_op_interval_ns);
+			                                         &factory,
+			                                         config.database.nr_entry,
+			                                         config.database.key_size,
+			                                         config.database.value_size,
+			                                         config.workload.scan_length,
+			                                         config.workload.nr_thread,
+			                                         op_prop,
+			                                         nr_op,
+			                                         config.workload.next_op_interval_ns,
+			                                         nullptr);
 		} else if (config.workload.request_distribution == "zipfian") {
 			run_zipfian_workload_with_op_measurement(i == 0 ? "Zipfian (Warm-Up)" : "Zipfian",
-								 &factory,
-								 config.database.nr_entry,
-								 config.database.key_size,
-								 config.database.value_size,
-								 config.workload.scan_length,
-								 config.workload.nr_thread,
-								 op_prop,
-								 config.workload.zipfian_constant,
-								 nr_op,
-								 config.workload.next_op_interval_ns);
+			                                         &factory,
+			                                         config.database.nr_entry,
+			                                         config.database.key_size,
+			                                         config.database.value_size,
+			                                         config.workload.scan_length,
+			                                         config.workload.nr_thread,
+			                                         op_prop,
+			                                         config.workload.zipfian_constant,
+			                                         nr_op,
+			                                         config.workload.next_op_interval_ns,
+			                                         nullptr);
 		} else if (config.workload.request_distribution == "latest") {
 			run_latest_workload_with_op_measurement(i == 0 ? "Latest (Warm-Up)" : "Latest",
-								&factory,
-								config.database.nr_entry,
-								config.database.key_size,
-								config.database.value_size,
-								config.workload.nr_thread,
-								op_prop.op[READ],
-								config.workload.zipfian_constant,
-								nr_op,
-								config.workload.next_op_interval_ns);
+			                                        &factory,
+			                                        config.database.nr_entry,
+			                                        config.database.key_size,
+			                                        config.database.value_size,
+			                                        config.workload.nr_thread,
+			                                        op_prop.op[READ],
+			                                        config.workload.zipfian_constant,
+			                                        nr_op,
+			                                        config.workload.next_op_interval_ns,
+			                                        nullptr);
 		}
 	}
 }
