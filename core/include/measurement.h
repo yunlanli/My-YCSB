@@ -33,6 +33,7 @@ struct OpMeasurement {
 	std::vector<double> final_latency_vec[NR_OP_TYPE];
 
 	OpMeasurement();
+	void enable_client(int client_id);
 	void set_max_progress(long new_max_progress);
 	void start_measure();
 	void finish_measure();

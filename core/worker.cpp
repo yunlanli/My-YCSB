@@ -76,6 +76,7 @@ void run_workload_with_op_measurement(const char *task, ClientFactory *factory, 
 	OpMeasurement measurement;
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		client_arr[thread_index] = factory->create_client();
+		measurement.enable_client(client_arr[thread_index].id);
 	}
 
 	/* start running workload */

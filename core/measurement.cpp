@@ -10,6 +10,11 @@ OpMeasurement::OpMeasurement() {
 	this->final_result_lock.lock();
 }
 
+void OpMeasurement::enable_client(int client_id) {
+	this.per_client_latency_vec[client_id].clear();
+	this.per_client_timestamp_vec[client_id].clear();
+}
+
 void OpMeasurement::set_max_progress(long new_max_progress) {
 	this->max_progress = new_max_progress;
 }
