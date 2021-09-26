@@ -1,15 +1,15 @@
 # Database Parameters
 database:
   key_size: 16
-  value_size: 4096
-  nr_entry: 262144
+  value_size: 64
+  nr_entry: 16777216
 
 # Workload Parameters
 workload:
   nr_warmup_op: 0
-  nr_op: 5000000
-  nr_init_thread: 1
-  nr_thread: 1
+  nr_op: 1000000
+  nr_init_thread: 16
+  nr_thread: 16
   next_op_interval_ns: 0
   operation_proportion:
     read: 1
