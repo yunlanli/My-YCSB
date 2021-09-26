@@ -97,12 +97,12 @@ double OpMeasurement::get_latency_percentile(OperationType type, float percentil
 void OpMeasurement::save_latency(const char *path) {
 	std::ofstream file;
 	file.open(path);
-	fprintf("Timestamp (ns),Client ID,Operation,Latency (ns)\n");
+	fprintf(file, "Timestamp (ns),Client ID,Operation,Latency (ns)\n");
 	for (auto& client_it : this->per_client_latency_vec) {
 		int id = client_it->first;
 		for (int op = 0; op < NR_OP_TYPE; ++op) {
 			for (size_t i = 0; i < this->per_client_latency_vec[id][op].size(); ++i) {
-				fprintf("%ld,%d,%d,%ld\n",
+				fprintf(file, "%ld,%d,%d,%ld\n",
 				        this->per_client_timestamp_vec[id][op][i],
 				        id,
 				        operation_type_name[op],
