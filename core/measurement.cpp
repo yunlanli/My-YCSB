@@ -11,8 +11,8 @@ OpMeasurement::OpMeasurement() {
 }
 
 void OpMeasurement::enable_client(int client_id) {
-	this->per_client_latency_vec[client_id].clear();
-	this->per_client_timestamp_vec[client_id].clear();
+	this->per_client_latency_vec[client_id][0].clear();
+	this->per_client_timestamp_vec[client_id][0].clear();
 }
 
 void OpMeasurement::set_max_progress(long new_max_progress) {
