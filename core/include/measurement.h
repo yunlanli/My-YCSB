@@ -12,7 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <numeric>
-#include <fstream>
+#include <cstdio>
 
 
 struct OpMeasurement {

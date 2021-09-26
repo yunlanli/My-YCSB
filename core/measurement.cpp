@@ -95,8 +95,12 @@ double OpMeasurement::get_latency_percentile(OperationType type, float percentil
 }
 
 void OpMeasurement::save_latency(const char *path) {
-	std::ofstream file;
-	file.open(path);
+	FILE *file = fopen(path, "w");
+	if (file == nullptr) {
+		fprintf(stderr, "OpMeasurement: failed to open latency file %s\n",
+		        path);
+		throw std::invalid_argument("failed to open latency file");
+	}
 	fprintf(file, "Timestamp (ns),Client ID,Operation,Latency (ns)\n");
 	for (auto& client_it : this->per_client_latency_vec) {
 		int id = client_it->first;
@@ -110,5 +114,5 @@ void OpMeasurement::save_latency(const char *path) {
 			}
 		}
 	}
-	file.close();
+	fclose(file);
 }
