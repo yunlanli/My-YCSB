@@ -7,6 +7,7 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 	std::chrono::steady_clock::time_point start_time, finish_time;
 	std::chrono::steady_clock::time_point next_op_time = std::chrono::steady_clock::now();
 
+	measurement->start_measure();
 	while (workload->has_next_op()) {
 		workload->next_op(&op);
 		while (std::chrono::steady_clock::now() < next_op_time) {
@@ -20,6 +21,7 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 		measurement->record_progress(1);
 		next_op_time += std::chrono::nanoseconds(next_op_interval_ns);
 	}
+	measurement->finish_measure();
 	client->reset();
 	delete[] op.key_buffer;
 	delete[] op.value_buffer;
@@ -80,7 +82,6 @@ void run_workload_with_op_measurement(const char *task, ClientFactory *factory, 
 	}
 
 	/* start running workload */
-	measurement.start_measure();
 	measurement.set_max_progress(max_progress);
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		thread_arr[thread_index] = new std::thread(worker_thread_fn, client_arr[thread_index], workload_arr[thread_index], &measurement, next_op_interval_ns);
@@ -89,7 +90,7 @@ void run_workload_with_op_measurement(const char *task, ClientFactory *factory, 
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		thread_arr[thread_index]->join();
 	}
-	measurement.finish_measure();
+	measurement.finalize_measure();
 	if (latency_file != nullptr)
 		measurement.save_latency(latency_file);
 	stat_thread.join();

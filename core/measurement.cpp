@@ -8,9 +8,11 @@ OpMeasurement::OpMeasurement() {
 	this->cur_progress = 0;
 	this->finished = false;
 	this->final_result_lock.lock();
+	this->nr_active_client = 0;
 }
 
 void OpMeasurement::enable_client(int client_id) {
+	/* trigger unordered_map allocation for client_id */
 	this->per_client_latency_vec[client_id][0].clear();
 	this->per_client_timestamp_vec[client_id][0].clear();
 }
@@ -20,13 +22,24 @@ void OpMeasurement::set_max_progress(long new_max_progress) {
 }
 
 void OpMeasurement::start_measure() {
-	this->start_time = std::chrono::steady_clock::now();
-	this->rt_time = std::chrono::steady_clock::now();
+	int total_nr_client = this->per_client_latency_vec.size();
+	int prev_nr_active_client = this->nr_active_client.fetch_add(1);
+	if (prev_nr_active_client == total_nr_client - 1) {
+		this->start_time = std::chrono::steady_clock::now();
+		this->rt_time = std::chrono::steady_clock::now();
+	}
 }
 
 void OpMeasurement::finish_measure() {
-	this->finished = true;
-	this->end_time = std::chrono::steady_clock::now();
+	int total_nr_client = this->per_client_latency_vec.size();
+	int prev_nr_active_client = this->nr_active_client.fetch_sub(1);
+	if (prev_nr_active_client == total_nr_client) {
+		this->finished.store(true);
+		this->end_time = std::chrono::steady_clock::now();
+	}
+}
+
+void OpMeasurement::finalize_measure() {
 	for (int i = 0; i < NR_OP_TYPE; ++i) {
 		for (const auto& client_vec : this->per_client_latency_vec) {
 			this->final_latency_vec[i].insert(this->final_latency_vec[i].end(), client_vec.second[i].begin(), client_vec.second[i].end());
@@ -37,6 +50,8 @@ void OpMeasurement::finish_measure() {
 }
 
 void OpMeasurement::record_op(OperationType type, double latency, int id) {
+	if (this->per_client_latency_vec.size() != this->nr_active_client.load())
+		return;
 	long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(
 		std::chrono::steady_clock::now() - this->start_time
 	).count();
@@ -62,6 +77,13 @@ double OpMeasurement::get_throughput(OperationType type) {
 }
 
 void OpMeasurement::get_rt_throughput(double *throughput_arr) {
+	if (this->per_client_latency_vec.size() != this->nr_active_client.load()) {
+		/* not all the clients have started */
+		for (int i = 0; i < NR_OP_TYPE; ++i) {
+			throughput_arr[i] = 0;
+		}
+		return;
+	}
 	std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 	long duration = std::chrono::duration_cast<std::chrono::microseconds>(
 		cur_time - this->rt_time

@@ -26,6 +26,7 @@ struct OpMeasurement {
 	long max_progress;
 	std::atomic<long> cur_progress;
 	std::atomic<bool> finished;
+	std::atomic<int> nr_active_client;
 	std::mutex final_result_lock;
 
 	std::unordered_map<int, std::vector<double>[NR_OP_TYPE]> per_client_latency_vec;
@@ -35,8 +36,10 @@ struct OpMeasurement {
 	OpMeasurement();
 	void enable_client(int client_id);
 	void set_max_progress(long new_max_progress);
+
 	void start_measure();
 	void finish_measure();
+	void finalize_measure();
 
 	void record_op(OperationType type, double latency, int id);
 	void record_progress(long progress_delta);
