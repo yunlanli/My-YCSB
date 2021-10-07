@@ -30,6 +30,9 @@ struct RedisConfig {
 		long scan_length;
 	} workload;
 	struct {
+		string latency_file;
+	} measurement;
+	struct {
 		string addr;
 		int port;
 		int batch_size;
@@ -61,6 +64,9 @@ RedisConfig RedisConfig::parse_yaml(YAML::Node &root) {
 	config.workload.request_distribution = workload["request_distribution"].as<string>();
 	config.workload.zipfian_constant = workload["zipfian_constant"].as<double>();
 	config.workload.scan_length = workload["scan_length"].as<long>();
+
+	YAML::Node measurement = root["measurement"];
+	config.measurement.latency_file = measurement["latency_file"].as<string>();
 
 	YAML::Node redis = root["redis"];
 	config.redis.addr = redis["addr"].as<string>();

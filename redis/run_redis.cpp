@@ -14,6 +14,9 @@ int main(int argc, char *argv[]) {
 	int port = config.redis.port;
 	if (argc == 3)
 		port = atoi(argv[2]);
+	const char *latency_file = nullptr;
+	if (!config.measurement.latency_file.empty())
+		latency_file = config.measurement.latency_file.c_str();
 
 	RedisFactory factory(config.redis.addr.c_str(), port, config.redis.batch_size);
 
@@ -43,7 +46,7 @@ int main(int argc, char *argv[]) {
 			                                         op_prop,
 			                                         nr_op,
 			                                         config.workload.next_op_interval_ns,
-			                                         nullptr);
+			                                         latency_file);
 		} else if (config.workload.request_distribution == "zipfian") {
 			run_zipfian_workload_with_op_measurement(i == 0 ? "Zipfian (Warm-Up)" : "Zipfian",
 			                                         &factory,
@@ -56,7 +59,7 @@ int main(int argc, char *argv[]) {
 			                                         config.workload.zipfian_constant,
 			                                         nr_op,
 			                                         config.workload.next_op_interval_ns,
-			                                         nullptr);
+			                                         latency_file);
 		} else if (config.workload.request_distribution == "latest") {
 			run_latest_workload_with_op_measurement(i == 0 ? "Latest (Warm-Up)" : "Latest",
 			                                        &factory,
@@ -68,7 +71,7 @@ int main(int argc, char *argv[]) {
 			                                        config.workload.zipfian_constant,
 			                                        nr_op,
 			                                        config.workload.next_op_interval_ns,
-			                                        nullptr);
+			                                        latency_file);
 		}
 	}
 }
