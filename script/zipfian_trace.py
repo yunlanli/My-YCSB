@@ -44,4 +44,4 @@ if __name__ == "__main__":
     
     with open(output_file, "w") as fp:
         for key in key_list:
-            fp.write(f"READ,{key:016}\n")
+            fp.write(f"READ,{key:015}\n")
