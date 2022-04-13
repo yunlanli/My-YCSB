@@ -18,7 +18,7 @@ if __name__ == "__main__":
         exit(1)
 
     nr_entry = 1073741824
-    nr_op = 10000000
+    nr_op = 100000000
     batch_size = 10000
     zipfian_constant = float(sys.argv[1])
     read_ratio = 1
