@@ -21,9 +21,7 @@ workload:
   zipfian_constant: 0.99
   # for trace workload
   trace_file_list:
-    - "/home/yuhongyi/tmpfs/trace_0"
-    - "/home/yuhongyi/tmpfs/trace_1"
-    - "/home/yuhongyi/tmpfs/trace_2"
+    - "./cur_trace"
   # for scan operation
   scan_length: 100
 
