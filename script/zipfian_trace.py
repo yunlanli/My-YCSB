@@ -36,12 +36,13 @@ if __name__ == "__main__":
         raw_key -= 1
         cur_nr_iter += 1
         if cur_nr_iter % 10000 == 0:
-            print(f"{cur_nr_op}/{nr_op} ({(cur_nr_op / nr_op) * 100:.2f}%)")
+            print(f"{cur_nr_op + 1}/{nr_op} ({((cur_nr_op + 1) / nr_op) * 100:.2f}%)\r", end="")
         if raw_key >= nr_entry:
             continue
         key_list.append(fnv1_64_hash(raw_key) % nr_entry)
         cur_nr_op += 1
-    
+    print(f"{nr_op}/{nr_op} (100.00%)")
+
     with open(output_file, "w") as fp:
         for key in key_list:
             fp.write(f"READ,{key:015}\n")
