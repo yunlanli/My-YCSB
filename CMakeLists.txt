@@ -32,3 +32,8 @@ add_executable(run_memcached ${CoreSource} ${MemcachedClientSource} memcached/ru
 target_link_libraries(init_memcached pthread memcached ${YAML_CPP_LIBRARIES})
 target_link_libraries(run_memcached pthread memcached ${YAML_CPP_LIBRARIES})
 
+set(LevelDBClientSource leveldb/leveldb_config.cpp leveldb/leveldb_client.cpp)
+add_executable(init_leveldb ${CoreSource} ${LevelDBClientSource} leveldb/init_leveldb.cpp)
+add_executable(run_leveldb ${CoreSource} ${LevelDBClientSource} leveldb/run_leveldb.cpp)
+target_link_libraries(init_leveldb /usr/lib/x86_64-linux-gnu/libsnappy.so /usr/local/lib/libleveldb.so pthread ${YAML_CPP_LIBRARIES})
+target_link_libraries(run_leveldb /usr/lib/x86_64-linux-gnu/libsnappy.so /usr/local/lib/libleveldb.so pthread ${YAML_CPP_LIBRARIES})

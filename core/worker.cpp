@@ -4,6 +4,7 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 	Operation op;
 	op.key_buffer = new char[workload->key_size];
 	op.value_buffer = new char[workload->value_size];
+	op.reply_value_buffer = new char[workload->value_size];
 	std::chrono::steady_clock::time_point start_time, finish_time;
 	std::chrono::steady_clock::time_point next_op_time = std::chrono::steady_clock::now();
 
@@ -25,6 +26,7 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 	client->reset();
 	delete[] op.key_buffer;
 	delete[] op.value_buffer;
+	delete[] op.reply_value_buffer;
 }
 
 void monitor_thread_fn(const char *task, OpMeasurement *measurement) {
